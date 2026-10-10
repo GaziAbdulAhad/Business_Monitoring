@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ব্যবসা মনিটরিং — Google Sheet Sync</title>
+<style>
+:root{
+  --bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
+  --brand:#0f766e;--brand2:#14b8a6;--accent:#f59e0b;--danger:#ef4444;
+  --blue:#3b82f6;--purple:#8b5cf6;--pink:#ec4899;
+  --soft:#f0fdfa;--success:#10b981;
+  --shadow:0 4px 16px rgba(15,23,42,.07);
+}
+[data-theme="dark"]{
+  --bg:#0f172a;--card:#1e293b;--ink:#f1f5f9;--muted:#94a3b8;--line:#334155;
+  --soft:#134e4a;--shadow:0 4px 16px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Hind Siliguri","Noto Sans Bengali",sans-serif;
+  line-height:1.6;padding-bottom:80px;transition:background .3s,color .3s;
+}
+.wrap{max-width:1250px;margin:0 auto;padding:0 16px}
+
+/* Top bar */
+.top-bar{background:linear-gradient(135deg,#0f766e,#1e3a8a);color:#fff;padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:0 4px 20px rgba(0,0,0,.15)}
+.top-bar .wrap{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.logo{font-size:1.15rem;font-weight:800;display:flex;align-items:center;gap:6px}
+.top-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.icon-btn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:.95rem;display:flex;align-items:center;justify-content:center;transition:.2s;font-family:inherit;position:relative}
+.icon-btn:hover{background:rgba(255,255,255,.3)}
+.icon-btn:active{transform:scale(.95)}
+.icon-btn.synced{background:rgba(16,185,129,.4);border-color:rgba(16,185,129,.6)}
+.icon-btn.error{background:rgba(239,68,68,.4);border-color:rgba(239,68,68,.6)}
+.sync-status{
+  font-size:.72rem;color:#fff;background:rgba(255,255,255,.15);
+  padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);
+  display:flex;align-items:center;gap:5px;
+}
+
+/* Quarter bar */
+.quarter-bar{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:12px 16px;margin:18px 0;box-shadow:var(--shadow);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;
+}
+.quarter-bar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.quarter-bar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.q-select{
+  padding:9px 14px;border-radius:10px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);font:inherit;font-weight:600;
+  cursor:pointer;min-width:220px;
+}
+.btn-new-q{
+  padding:9px 16px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--brand),var(--brand2));
+  color:#fff;cursor:pointer;font:inherit;font-weight:700;
+  transition:.2s;display:flex;align-items:center;gap:6px;
+}
+.btn-new-q:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,118,110,.3)}
+.q-status{
+  font-size:.82rem;color:var(--muted);
+  padding:6px 12px;background:var(--bg);border-radius:99px;
+  border:1px solid var(--line);
+}
+
+/* Dashboard */
+.dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px}
+.dash-card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.dash-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
+.dash-card.green::before{background:var(--brand)}
+.dash-card.orange::before{background:var(--accent)}
+.dash-card.blue::before{background:var(--blue)}
+.dash-card.purple::before{background:var(--purple)}
+.dash-card.pink::before{background:var(--pink)}
+.dash-icon{font-size:1.3rem;margin-bottom:2px}
+.dash-value{font-size:1.5rem;font-weight:800;line-height:1.1;color:var(--ink)}
+.dash-label{font-size:.75rem;color:var(--muted);margin-top:2px}
+.dash-sub{font-size:.7rem;color:var(--brand);margin-top:3px;font-weight:600}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;background:var(--card);padding:6px;border-radius:12px;border:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
+.tab{padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;white-space:nowrap;transition:.2s;border:none;background:transparent;color:var(--muted);font-family:inherit}
+.tab.active{background:var(--brand);color:#fff}
+.tab:hover:not(.active){background:var(--line)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:1.05rem;margin-bottom:12px;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.card h3{font-size:.95rem;margin:14px 0 8px;color:var(--brand)}
+
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px}
+.info-field{display:flex;flex-direction:column;gap:4px}
+.info-field label{font-size:.78rem;color:var(--muted);font-weight:600}
+.info-field input,.info-field textarea,.info-field select{
+  padding:8px 10px;border:1px solid var(--line);border-radius:8px;
+  background:var(--bg);color:var(--ink);font:inherit;font-size:.88rem;
+}
+.info-field input:focus,.info-field textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
+
+/* Week nav */
+.week-nav{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.week-nav select{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer;flex:1;min-width:180px}
+.week-nav button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit;font-weight:600;font-family:inherit;transition:.2s;font-size:.85rem}
+.week-nav button:hover{background:var(--brand);color:#fff;border-color:var(--brand)}
+.day-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;margin-top:14px}
+.day-item{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;gap:10px;align-items:flex-start;background:var(--card);cursor:pointer;transition:.2s}
+.day-item:hover{border-color:var(--brand);transform:translateY(-1px)}
+.day-item.done{background:#ecfdf5;border-color:#86efac}
+[data-theme="dark"] .day-item.done{background:#064e3b55;border-color:#10b981}
+.day-item.done .day-text{text-decoration:line-through;color:var(--muted)}
+.day-item input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--brand);cursor:pointer;flex-shrink:0}
+.day-num{display:inline-block;background:var(--brand);color:#fff;font-size:.68rem;padding:2px 8px;border-radius:99px;font-weight:700;margin-bottom:4px}
+.day-text{font-size:.9rem;line-height:1.5}
+
+/* Progress ring */
+.progress-section{display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px}
+.ring-wrap{position:relative;width:100px;height:100px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg);display:block}
+.ring-bg{fill:none;stroke:var(--line);stroke-width:10}
+.ring-fill{fill:none;stroke:#0f766e;stroke-width:10;stroke-linecap:round;stroke-dasharray:314.159;stroke-dashoffset:314.159;transition:stroke-dashoffset .6s}
+.ring-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.3rem;font-weight:800;color:var(--brand)}
+.progress-info{flex:1;min-width:180px}
+.progress-info h3{font-size:1rem;margin-bottom:4px;color:var(--ink)}
+.progress-info p{color:var(--muted);font-size:.84rem}
+
+/* Tables */
+.data-table{width:100%;border-collapse:collapse;font-size:.86rem}
+.data-table th,.data-table td{padding:9px 6px;text-align:left;border-bottom:1px solid var(--line)}
+.data-table th{color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase}
+.data-table input{width:100%;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit}
+.data-table input:focus{outline:2px solid var(--brand);outline-offset:1px}
+.data-table tfoot th{background:var(--bg);font-weight:700;color:var(--ink)}
+
+/* Chart */
+.chart-wrap{margin-top:12px;width:100%}
+.chart-container{display:flex;gap:10px;height:280px;padding:4px 0}
+.chart-y-axis{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;padding-bottom:42px;font-size:.72rem;color:var(--muted);font-weight:600;min-width:52px;text-align:right;flex-shrink:0}
+.chart-bars{flex:1;display:flex;align-items:flex-end;justify-content:space-around;gap:3px;border-left:1px solid var(--line);border-bottom:1px solid var(--line);padding:0 4px;min-width:0;overflow-x:auto}
+.chart-bar-wrap{flex:1 0 32px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;min-width:32px;cursor:pointer;transition:transform .15s}
+.chart-bar-wrap:hover{transform:translateY(-2px)}
+.chart-bar-value{font-size:.7rem;font-weight:700;color:var(--ink);margin-bottom:4px;white-space:nowrap;opacity:0;transition:opacity .2s;position:absolute;bottom:100%;padding-bottom:2px}
+.chart-bar-wrap:hover .chart-bar-value,.chart-bar-wrap.has-value .chart-bar-value{opacity:1}
+.chart-bar{width:70%;max-width:42px;min-height:3px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s ease,background .3s;box-shadow:0 2px 6px rgba(15,118,110,.2);position:relative}
+.chart-bar.empty{background:var(--line);min-height:3px;border-radius:2px;box-shadow:none}
+.chart-bar-wrap:hover .chart-bar:not(.empty){background:linear-gradient(180deg,var(--brand),var(--brand2));box-shadow:0 4px 12px rgba(15,118,110,.4)}
+.chart-bar-label{font-size:.7rem;color:var(--muted);margin-top:6px;font-weight:600;white-space:nowrap}
+.chart-bar-dot{width:6px;height:6px;border-radius:50%;background:var(--brand);margin-top:2px;opacity:0;transition:opacity .2s}
+.chart-bar-wrap.has-value .chart-bar-dot{opacity:1}
+[data-theme="dark"] .chart-bar{box-shadow:0 2px 6px rgba(20,184,166,.25)}
+[data-theme="dark"] .chart-bar.empty{background:#334155}
+
+/* Compare chart */
+.compare-chart{display:flex;align-items:flex-end;justify-content:space-around;gap:6px;height:260px;padding:10px 6px 0;border-left:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:10px;overflow-x:auto}
+.cc-bar{flex:1 0 60px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;position:relative;min-width:60px;cursor:pointer;transition:transform .15s}
+.cc-bar:hover{transform:translateY(-2px)}
+.cc-value{font-size:.72rem;font-weight:700;color:var(--ink);margin-bottom:3px;opacity:0;transition:opacity .2s;position:absolute;bottom:100%;padding-bottom:2px;white-space:nowrap}
+.cc-bar:hover .cc-value,.cc-bar .cc-value.show{opacity:1}
+.cc-bar-fill{width:70%;max-width:48px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s,background .3s;box-shadow:0 2px 6px rgba(15,118,110,.2);min-height:2px}
+.cc-bar.empty .cc-bar-fill{background:var(--line);min-height:2px;box-shadow:none}
+.cc-bar.active .cc-bar-fill{background:linear-gradient(180deg,var(--brand),var(--brand2));box-shadow:0 4px 14px rgba(15,118,110,.4)}
+.cc-label{font-size:.7rem;color:var(--muted);margin-top:6px;font-weight:600;white-space:nowrap}
+.cc-bar.active .cc-label{color:var(--brand);font-weight:700}
+
+/* Metric switch */
+.metric-switch{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.metric-btn{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;font-size:.8rem;font-family:inherit;font-weight:600;transition:.2s}
+.metric-btn.active{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+/* Growth badge */
+.growth-badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700;margin-left:6px}
+.growth-badge.up{background:#d1fae5;color:#065f46}
+.growth-badge.down{background:#fee2e2;color:#991b1b}
+.growth-badge.neutral{background:#e2e8f0;color:#475569}
+[data-theme="dark"] .growth-badge.up{background:#064e3b;color:#6ee7b7}
+[data-theme="dark"] .growth-badge.down{background:#7f1d1d;color:#fca5a5}
+[data-theme="dark"] .growth-badge.neutral{background:#334155;color:#cbd5e1}
+
+/* Pipeline */
+.pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.pipe-stage{background:var(--bg);border-radius:10px;padding:12px;border:1px solid var(--line);text-align:center}
+.pipe-stage h4{font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.pipe-count{font-size:1.5rem;font-weight:800;color:var(--brand);margin-bottom:8px}
+.pipe-btn{width:100%;padding:6px;font-size:.75rem;border-radius:6px;border:1px dashed var(--line);background:transparent;color:var(--muted);cursor:pointer;font-family:inherit;margin-top:4px;transition:.2s}
+.pipe-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--card)}
+
+/* Notes */
+.notes-area{width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical;line-height:1.6}
+.notes-area:focus{outline:2px solid var(--brand);outline-offset:1px}
+
+/* Toast */
+.toast{position:fixed;bottom:90px;right:20px;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-size:.88rem;z-index:999;opacity:0;transform:translateY(20px);transition:.3s;pointer-events:none;max-width:320px}
+.toast.show{opacity:1;transform:none}
+.toast.success{background:#10b981;color:#fff}
+.toast.error{background:#ef4444;color:#fff}
+
+/* Sticky bottom */
+.sticky-bottom{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);padding:10px 20px;z-index:90;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.85rem}
+.sticky-progress{flex:1;height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.sticky-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0;transition:width .4s}
+.sticky-text{font-weight:700;color:var(--brand);white-space:nowrap}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+.modal-overlay.show{display:flex}
+.modal{background:var(--card);border-radius:16px;padding:22px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.modal h3{font-size:1.1rem;margin-bottom:14px;color:var(--ink)}
+.modal .info-field{margin-bottom:12px}
+.modal-buttons{display:flex;gap:10px;margin-top:16px}
+.modal-buttons button{flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font:inherit;font-weight:700;font-family:inherit;transition:.2s}
+.btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,118,110,.3)}
+.btn-secondary{background:var(--bg);color:var(--ink);border:1px solid var(--line)!important}
+.btn-danger{background:#ef4444;color:#fff}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state h2{color:var(--ink);margin-bottom:8px;font-size:1.3rem}
+.empty-state p{margin-bottom:20px;font-size:.92rem}
+.empty-state .btn-new-q{padding:12px 24px;font-size:.95rem;display:inline-flex}
+
+/* Sync section in modal */
+.sync-section{border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
+.sync-section h4{font-size:.9rem;margin-bottom:8px;color:var(--ink)}
+.sync-help{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.sync-help ol{margin:6px 0 0 18px}
+.sync-help code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.85em;color:var(--brand)}
+.sync-url-input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.82rem;font-family:monospace}
+.sync-buttons{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.sync-buttons button{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font:inherit;font-weight:600;font-family:inherit;font-size:.85rem;transition:.2s;min-width:100px}
+.btn-sync-save{background:var(--brand);color:#fff}
+.btn-sync-save:hover{background:var(--brand2)}
+.btn-sync-test{background:var(--bg);color:var(--ink);border:1px solid var(--line)!important}
+.btn-sync-send{background:var(--blue);color:#fff}
+.btn-sync-load{background:var(--purple);color:#fff}
+.btn-sync-clear{background:#fef2f2;color:#991b1b}
+
+.sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--muted);padding:4px 10px;background:var(--bg);border-radius:99px;border:1px solid var(--line)}
+.sync-badge.active{color:var(--success);border-color:var(--success)}
+
+@media(max-width:768px){
+  .dashboard{grid-template-columns:repeat(2,1fr)}
+  .pipeline{grid-template-columns:repeat(2,1fr)}
+  .day-grid{grid-template-columns:1fr}
+  .top-bar .wrap{flex-direction:column;align-items:flex-start}
+  .quarter-bar{flex-direction:column;align-items:stretch}
+}
+@media(max-width:600px){
+  .chart-y-axis{min-width:40px;font-size:.65rem}
+  .chart-bar-value{font-size:.62rem}
+  .chart-bar-label{font-size:.6rem;transform:rotate(-45deg);transform-origin:center;margin-top:10px}
+  .chart-bar-wrap{min-width:24px;flex:1 0 24px}
+  .chart-container{height:240px}
+}
+@media print{
+  .top-bar,.sticky-bottom,.tabs,.top-actions,.week-nav button,.pipe-btn,.icon-btn,.quarter-bar-right,.metric-switch{display:none!important}
+  .tab-content{display:block!important;page-break-inside:avoid;margin-bottom:20px}
+  .tab-content::before{content:attr(data-print-title);display:block;font-size:1.2rem;font-weight:700;margin:16px 0 8px;color:#000}
+  body{background:#fff;padding:0}
+  .card,.dash-card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div class="wrap">
+    <div class="logo">💼 ব্যবসা মনিটরিং <span style="font-size:.65rem;opacity:.7;font-weight:400">Cloud Sync</span></div>
+    <div class="top-actions">
+      <span class="sync-status" id="syncStatus">⚪ Synced নেই</span>
+      <button class="icon-btn" id="quickSyncBtn" title="Google Sheet-এ সেভ">☁️</button>
+      <button class="icon-btn" id="quickLoadBtn" title="Google Sheet থেকে লোড">⬇️</button>
+      <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
+      <button class="icon-btn" id="themeToggle" title="ডার্ক মোড">🌙</button>
+      <button class="icon-btn" id="exportBtn" title="Local Export">💾</button>
+      <button class="icon-btn" id="importBtn" title="Local Import">📂</button>
+      <button class="icon-btn" id="printBtn" title="Print">🖨️</button>
+      <button class="icon-btn" id="resetBtn" title="Reset">🔄</button>
+      <input type="file" id="importInput" accept=".json" style="display:none">
+    </div>
+  </div>
+</div>
+
+<div class="wrap" style="padding-top:18px">
+
+  <div class="empty-state" id="emptyState" style="display:none">
+    <h2>👋 স্বাগতম!</h2>
+    <p>এখনো কোনো Quarter তৈরি করা হয়নি।<br>শুরু করতে "নতুন Quarter" বাটনে ক্লিক করুন।</p>
+    <button class="btn-new-q" id="emptyNewQ">➕ প্রথম Quarter শুরু করো</button>
+  </div>
+
+  <div id="mainApp" style="display:none">
+
+    <div class="quarter-bar">
+      <div class="quarter-bar-left">
+        <select class="q-select" id="quarterSelect"></select>
+        <span class="q-status" id="qStatus">—</span>
+      </div>
+      <div class="quarter-bar-right">
+        <span class="sync-badge" id="syncBadge">—</span>
+        <button class="btn-new-q" id="newQuarterBtn">➕ নতুন Quarter</button>
+      </div>
+    </div>
+
+    <div class="dashboard" id="dashboard"></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="overview">📋 সারসংক্ষেপ</button>
+      <button class="tab" data-tab="tasks">📅 ৯০ দিনের টাস্ক</button>
+      <button class="tab" data-tab="budget">💰 বাজেট</button>
+      <button class="tab" data-tab="kpi">📊 KPI</button>
+      <button class="tab" data-tab="pipeline">🎯 পাইপলাইন</button>
+      <button class="tab" data-tab="compare">📈 Quarter তুলনা</button>
+      <button class="tab" data-tab="notes">📝 নোট</button>
+      <button class="tab" data-tab="summary">🏆 পুরো ব্যবসা</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-content active" id="tab-overview" data-print-title="📋 সারসংক্ষেপ">
+      <div class="card">
+        <h2>📋 Quarter-এর সারসংক্ষেপ</h2>
+        <div class="progress-section">
+          <div class="ring-wrap">
+            <svg width="100" height="100">
+              <circle class="ring-bg" cx="50" cy="50" r="45"/>
+              <circle class="ring-fill" id="ringFill" cx="50" cy="50" r="45"/>
+            </svg>
+            <div class="ring-text" id="ringText">০%</div>
+          </div>
+          <div class="progress-info">
+            <h3 id="progressTitle">শুরু করো!</h3>
+            <p id="progressDesc">টাস্ক ট্যাবে গিয়ে কাজ শুরু করো।</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Quarter-এর লক্ষ্য</h2>
+        <div class="info-grid">
+          <div class="info-field">
+            <label>সাধারণ Target (যেকোনো লেখা)</label>
+            <input type="text" id="qTargetText" placeholder="যেমন: ৩ জন নতুন কাস্টমার পাবো">
+          </div>
+          <div class="info-field">
+            <label>আয়ের Target (৳)</label>
+            <input type="number" id="qTargetIncome" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>কাস্টমার Target (সংখ্যা)</label>
+            <input type="number" id="qTargetCustomers" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>লাভের Target (৳)</label>
+            <input type="number" id="qTargetProfit" placeholder="০">
+          </div>
+        </div>
+        <h3>📝 Quarter-এর মূল কৌশল</h3>
+        <textarea class="notes-area" id="qStrategy" placeholder="এই Quarter-এ তুমি কী কৌশল অবলম্বন করবে?"></textarea>
+      </div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="tab-content" id="tab-tasks" data-print-title="📅 ৯০ দিনের টাস্ক">
+      <div class="card">
+        <h2>📅 ৯০ দিনের টাস্ক</h2>
+        <div class="week-nav">
+          <button id="prevWeek">◀ আগের</button>
+          <select id="weekSelect"></select>
+          <button id="nextWeek">পরের ▶</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+          <div>
+            <strong id="weekTitle">সপ্তাহ ১</strong>
+            <div style="font-size:.8rem;color:var(--muted)" id="weekDates"></div>
+          </div>
+          <div style="text-align:right;font-size:.84rem;max-width:55%">
+            <span style="color:var(--brand);font-weight:700">🎯 লক্ষ্য:</span>
+            <span id="weekGoal" style="color:var(--muted)"></span>
+          </div>
+        </div>
+        <div class="day-grid" id="dayGrid"></div>
+      </div>
+    </div>
+
+    <!-- BUDGET -->
+    <div class="tab-content" id="tab-budget" data-print-title="💰 বাজেট">
+      <div class="card">
+        <h2>💰 বাজেট ট্র্যাকার</h2>
+        <table class="data-table">
+          <thead>
+            <tr><th>খাত</th><th>পরিকল্পিত</th><th>প্রকৃত খরচ</th><th>অবস্থা</th></tr>
+          </thead>
+          <tbody id="budgetBody"></tbody>
+          <tfoot>
+            <tr>
+              <th colspan="2" style="text-align:left">মোট</th>
+              <th id="budgetTotal">৳০</th>
+              <th id="budgetRemain">—</th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- KPI -->
+    <div class="tab-content" id="tab-kpi" data-print-title="📊 সাপ্তাহিক KPI">
+      <div class="card">
+        <h2>📈 সাপ্তাহিক আয়ের চার্ট (এই Quarter)</h2>
+        <div class="chart-wrap">
+          <div class="chart-container">
+            <div class="chart-y-axis" id="kpiChartYAxis"></div>
+            <div class="chart-bars" id="kpiChartBars"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📊 সাপ্তাহিক KPI ট্র্যাকার</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>সপ্তাহ</th><th>যোগাযোগ</th><th>উত্তর</th><th>অফার</th><th>বিক্রি</th><th>আয় (৳)</th></tr>
+            </thead>
+            <tbody id="kpiBody"></tbody>
+            <tfoot>
+              <tr>
+                <th colspan="4" style="text-align:left">মোট</th>
+                <th id="kpiTotalSold">০</th>
+                <th id="kpiTotalIncome">৳০</th>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="tab-content" id="tab-pipeline" data-print-title="🎯 কাস্টমার পাইপলাইন">
+      <div class="card">
+        <h2>🎯 কাস্টমার পাইপলাইন</h2>
+        <div class="pipeline">
+          <div class="pipe-stage">
+            <h4>🆕 নতুন লিড</h4>
+            <div class="pipe-count" id="pipeNew">০</div>
+            <button class="pipe-btn" data-stage="new" data-action="add">+ যোগ</button>
+            <button class="pipe-btn" data-stage="new" data-action="sub">− কমাও</button>
+          </div>
+          <div class="pipe-stage">
+            <h4>💬 যোগাযোগ</h4>
+            <div class="pipe-count" id="pipeContact">০</div>
+            <button class="pipe-btn" data-stage="contact" data-action="add">+ যোগ</button>
+            <button class="pipe-btn" data-stage="contact" data-action="sub">− কমাও</button>
+          </div>
+          <div class="pipe-stage">
+            <h4>📄 অফার</h4>
+            <div class="pipe-count" id="pipeOffer">০</div>
+            <button class="pipe-btn" data-stage="offer" data-action="add">+ যোগ</button>
+            <button class="pipe-btn" data-stage="offer" data-action="sub">− কমাও</button>
+          </div>
+          <div class="pipe-stage">
+            <h4>✅ বিক্রি</h4>
+            <div class="pipe-count" id="pipeSold">০</div>
+            <button class="pipe-btn" data-stage="sold" data-action="add">+ যোগ</button>
+            <button class="pipe-btn" data-stage="sold" data-action="sub">− কমাও</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPARE -->
+    <div class="tab-content" id="tab-compare" data-print-title="📈 Quarter তুলনা">
+      <div class="card">
+        <h2>📈 সব Quarter-এর তুলনা</h2>
+        <div class="metric-switch" id="metricSwitch">
+          <button class="metric-btn active" data-metric="income">💰 আয়</button>
+          <button class="metric-btn" data-metric="profit">📈 লাভ</button>
+          <button class="metric-btn" data-metric="customers">👥 কাস্টমার</button>
+          <button class="metric-btn" data-metric="expense">💸 খরচ</button>
+          <button class="metric-btn" data-metric="tasks">✅ টাস্ক</button>
+        </div>
+        <div class="compare-chart" id="compareChart"></div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Quarter-ভিত্তিক ডেটা টেবিল</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Quarter</th><th>সময়কাল</th><th>আয়</th><th>খরচ</th><th>লাভ</th><th>কাস্টমার</th><th>টাস্ক</th>
+              </tr>
+            </thead>
+            <tbody id="compareTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTES -->
+    <div class="tab-content" id="tab-notes" data-print-title="📝 নোট">
+      <div class="card">
+        <h2>📝 Quarter-এর নোট</h2>
+        <textarea class="notes-area" id="notesArea" placeholder="Quarter-এর নোট লিখতে শুরু করো..."></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="pipe-btn" id="saveNotes" style="flex:1;padding:10px">💾 সেভ করো</button>
+          <button class="pipe-btn" id="clearNotes" style="flex:1;padding:10px">🗑️ মুছে ফেলো</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUMMARY -->
+    <div class="tab-content" id="tab-summary" data-print-title="🏆 পুরো ব্যবসার Summary">
+      <div class="card">
+        <h2>🏆 পুরো ব্যবসার সারসংক্ষেপ</h2>
+        <div class="dashboard" id="summaryDashboard"></div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Quarter-ভিত্তিক গ্রোথ</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Quarter</th><th>আয়</th><th>লাভ</th><th>কাস্টমার</th><th>আগের Quarter থেকে পরিবর্তন</th>
+              </tr>
+            </thead>
+            <tbody id="growthTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Modal 1: New Quarter -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- Modal 2: Settings -->
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <h3>⚙️ Settings — Google Sheet Sync</h3>
+    
+    <div class="sync-section">
+      <h4>☁️ Google Sheet সংযোগ</h4>
+      <p class="sync-help">
+        <strong>প্রথমবার সেটআপ:</strong>
+        <ol>
+          <li>Google Sheet খুলুন → Extensions → Apps Script</li>
+          <li>সেখানে backend কোড পেস্ট করে Deploy করুন</li>
+          <li>Web App URL কপি করুন (যেমন <code>https://script.google.com/macros/s/.../exec</code>)</li>
+          <li>নিচের ঘরে পেস্ট করে <strong>Save</strong> ক্লিক করুন</li>
+        </ol>
+      </p>
+      
+      <div class="info-field">
+        <label>Web App URL</label>
+        <input type="text" class="sync-url-input" id="syncUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+      </div>
+      
+      <div class="sync-buttons">
+        <button class="btn-sync-save" id="saveSyncUrl">💾 Save</button>
+        <button class="btn-sync-test" id="testSyncUrl">🔍 Test</button>
+      </div>
+      
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
+        <h4>📤 Sync Actions</h4>
+        <div class="sync-buttons">
+          <button class="btn-sync-send" id="syncSendBtn">☁️ Save to Sheet</button>
+          <button class="btn-sync-load" id="syncLoadBtn">⬇️ Load from Sheet</button>
+        </div>
+        <div class="sync-buttons" style="margin-top:8px">
+          <button class="btn-sync-clear" id="syncClearBtn">🗑️ Clear Sheet-এর ডেটা</button>
+        </div>
+      </div>
+      
+      <div style="margin-top:14px">
+        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer">
+          <input type="checkbox" id="autoSyncToggle">
+          <span>প্রতি ৫ মিনিটে অটো সেভ (Google Sheet-এ)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="modal-buttons">
+      <button class="btn-primary" id="closeSettings">বন্ধ করো</button>
+    </div>
+  </div>
+</div>
+
+<div class="sticky-bottom" id="stickyBottom" style="display:none">
+  <span class="sticky-text" id="stickyText">০/৯০ দিন</span>
+  <div class="sticky-progress"><div class="sticky-fill" id="stickyFill"></div></div>
+  <span style="color:var(--muted);font-size:.78rem" id="stickyQuarter">—</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   ১. ডেটা: ১৩ সপ্তাহের টাস্ক টেমপ্লেট
+   ============================================================ */
+const weekTemplates = [
+{title:"আইডিয়া ও সক্ষমতা যাচাই",goal:"নিজের দক্ষতা ও বাজারের সমস্যা বোঝা",tasks:["নিজের দক্ষতা, ডিভাইস, সময় ও আর্থিক সীমা লিখে ফেলো","ডিজিটাল সার্ভিস, নেটওয়ার্কিং ও পণ্য ব্যবসার তুলনা করো","১০ জন সম্ভাব্য কাস্টমারের নাম ও ব্যবসার তালিকা তৈরি করো","কমপক্ষে ৩ জন দোকানদারের সাথে কথা বলো","আরও ৩ জনের সমস্যা, অর্ডার পদ্ধতি ও বাজেট বোঝো","মোট ৬ জনের ফিডব্যাক বিশ্লেষণ করো","প্রাথমিক ব্যবসার আইডিয়া ও কাস্টমার গ্রুপ নির্বাচন করো"]},
+{title:"চাহিদা যাচাই ও অফার",goal:"সমস্যা বাস্তব কি না যাচাই করা",tasks:["প্রতিযোগী বা বিকল্প ৫টি সেবা খুঁজে দাম ও পরিধি দেখো","আরও ৩ জনের কাছে সমস্যা যাচাই করো","Starter Package-এর কাজের তালিকা চূড়ান্ত করো","মূল্য ৳১,৫০০ এবং ডেলিভারি শর্ত লেখো","Google Sheets-এ অর্ডার ট্র্যাকিং টেমপ্লেট বানাও","WhatsApp Business ক্যাটালগের ডেমো সাজাও","এক পাতার অফার তৈরি করে ৩ জনকে দেখাও"]},
+{title:"পোর্টফোলিও ও বিক্রয় যোগাযোগ",goal:"সরাসরি অফার পৌঁছানো ও আপত্তি বোঝা",tasks:["ডেমো ও আগে/পরে নমুনা ফাইল গোছাও","২০টি অনলাইন শপের তালিকা চূড়ান্ত করো","৫টি ব্যক্তিগতকৃত অফার মেসেজ পাঠাও","আরও ৫টি ব্যবসার সাথে যোগাযোগ ও ফলো-আপ করো","উত্তর দেওয়া কাস্টমারদের প্রয়োজন ও বাজেট জানো","আগ্রহী লিডকে ডেমো দেখাও ও আরও ৫ জনকে অফার পাঠাও","আউটরিচ ও আপত্তির নোট দেখে বার্তা উন্নত করো"]},
+{title:"প্রথম পেইড কাস্টমার",goal:"প্রথম পেইড ক্লায়েন্ট ক্লোজ করা",tasks:["আগের সব আগ্রহী লিডকে ফলো-আপ করো","৫ জন নতুন কাস্টমারের সাথে যোগাযোগ করো","কাজের ডেলিভারি সময় ও পেমেন্ট শর্ত লিখিত জানাও","কাস্টমারের সম্ভাব্য আপত্তির উত্তর প্রস্তুত রাখো","আগ্রহী ক্লায়েন্টের সাথে ১০–১৫ মিনিট কথা বলো","প্রথম পেইড কাজের ডেলিভারি শুরু করো","সপ্তাহের ফলাফল পর্যালোচনা করো"]},
+{title:"ডেলিভারি ও ফিডব্যাক",goal:"নিখুঁত ডেলিভারি ও ফিডব্যাক সংগ্রহ",tasks:["ক্লায়েন্টের প্রয়োজন লিখিতভাবে কনফার্ম করো","চেকলিস্ট অনুযায়ী পেজ ও WhatsApp ক্যাটালগ রেডি করো","অর্ডার ট্র্যাকিং শিটের ব্যবহার বুঝিয়ে দাও","কাস্টমারকে কাজ বুঝিয়ে অনুমোদন নাও","কাজের গঠনমূলক ফিডব্যাক ও পরামর্শ নাও","অনুমতি নিয়ে একটি কেস স্টাডি তৈরি করো","সময় ও খরচের হিসাব লিখে অফার উন্নত করো"]},
+{title:"পার্সোনাল ব্র্যান্ড",goal:"বাস্তব ফিডব্যাক দিয়ে অফার ধারালো করা",tasks:["ব্যবসার সাথে সম্পর্কিত শিক্ষামূলক কনটেন্ট বাছো","ছোট ব্যবসার সমস্যা নিয়ে ১০টি কনটেন্ট আইডিয়া লেখো","প্রথম ২টি সমাধানমূলক পোস্ট শেয়ার করো","প্রোফাইলের পরিচিতি ও অফার প্রফেশনাল করো","৫ জন নতুন কাস্টমারের সাথে যোগাযোগ করো","সন্তুষ্ট ক্লায়েন্টের কাছে রেফারেল চাও","কোন চ্যানেল থেকে সাড়া আসছে তা মেপে সেলস বাড়াও"]},
+{title:"অর্ডার সিস্টেম (SOP)",goal:"কার্যপদ্ধতি বানানো",tasks:["লিড ও ক্লায়েন্টের জন্য ডেডিকেটেড শিট সাজাও","অর্ডার থেকে ডেলিভারি পর্যন্ত SOP লেখো","ক্লায়েন্ট থেকে তথ্য নেওয়ার ফর্ম রেডি করো","পেমেন্ট ও রিভিশন পলিসি স্পষ্ট জানাও","প্রতিদিন ৫ জন নতুন ব্যবসার সাথে যোগাযোগ করো","চলমান কাজের মান ও সময়সীমা মনিটর করো","সপ্তাহের সময়, খরচ ও উপার্জনের বিবরণী আপডেট করো"]},
+{title:"রিভিউ ও রেফারেল",goal:"বিশ্বাসযোগ্য প্রমাণ তৈরি",tasks:["সম্পন্ন কাজের স্ক্রিনশট ও বিবরণী গোছাও","ক্লায়েন্টের কাছ থেকে লিখিত রিভিউ সংগ্রহ করো","রিভিউ প্রচারের অনুমতি নিয়ে পেজে শেয়ার করো","রেফারেলের জন্য ক্লায়েন্টকে ধন্যবাদ মেসেজ দাও","৩–১০ জন সমমনা উদ্যোক্তার সাথে আলোচনা করো","সার্কেল থেকে পাওয়া পরামর্শ লিখে রাখো","পরবর্তী সপ্তাহের আউটরিচ স্ট্র্যাটেজি উন্নত করো"]},
+{title:"লাভজনকতা বিশ্লেষণ",goal:"প্রকৃত লাভ নিশ্চিত করা",tasks:["সব বিক্রি ও ব্যয় এক টেবিলে আনো","প্রতি অর্ডারে ব্যয় হওয়া সময় ও লাভ বের করো","কম লাভজনক কাজ বাদ দিয়ে বেশি লাভে ফোকাস করো","Business Setup প্যাকেজের দাম সংশোধন করো","নতুন ৫ জনকে আপগ্রেডেড প্যাকেজ অফার করো","কাস্টমারদের সাধারণ প্রশ্নের FAQ গাইড বানাও","পরের সপ্তাহের প্রধান বিক্রয় লক্ষ্য ঠিক করো"]},
+{title:"ধারাবাহিক সেলস রুটিন",goal:"বিক্রয়কে অভ্যাসে রূপান্তর",tasks:["লিডগুলোকে পর্যায় অনুযায়ী সাজাও","সপ্তাহের জন্য ২০টি ব্যবসার তালিকা করো","প্রতিদিন নিয়ম করে অফার ও ফলো-আপ পাঠাও","বিক্রয় স্ক্রিপ্ট আরও আকর্ষণীয় করো","প্রতিটি অফারের পর পরবর্তী পদক্ষেপের তারিখ লেখো","কাস্টমারের আপত্তির কারণ দূর করো","সপ্তাহের সেলস ফানেল ও আয়ের হিসাব করো"]},
+{title:"রিটেনশন ও পুনরায় কাজ",goal:"মাসিক রিটেইনার তৈরি",tasks:["পূর্বের ক্লায়েন্টদের সাথে ফলো-আপ করো","Monthly Support প্যাকেজের তালিকা পরিষ্কার করো","উপযুক্ত ক্লায়েন্টদের মাসিক সহায়তার অফার দাও","নতুন ৫ জন ব্যবসায়ীর সাথে যোগাযোগ করো","সন্তুষ্ট ক্লায়েন্টদের নেটওয়ার্ক থেকে রেফারেল নাও","সার্ভিসের ডেলিভারি গতি ও কোয়ালিটি নিশ্চিত করো","পুনরাবৃত্ত আয়ের সম্ভাবনা নথিবদ্ধ করো"]},
+{title:"আর্থিক পর্যালোচনা",goal:"প্রমাণভিত্তিক সিদ্ধান্ত নেওয়া",tasks:["মোট রেভিনিউ, ব্যয় ও নিট মুনাফা হিসাব করো","ব্যবসায় ব্যয় করা মোট ঘণ্টা ও প্রতি ঘণ্টার আয় বের করো","সবচেয়ে বেশি চাহিদাসম্পন্ন সেবা নির্বাচন করো","অপ্রয়োজনীয় সাবস্ক্রিপশন বন্ধ করো","হাতে থাকা উদ্বৃত্ত ক্যাশ ও রিজার্ভ মেলাও","পরবর্তী ৯০ দিনের বাজেট তৈরি করো","ব্যবসা স্কেল করার প্রমাণভিত্তিক সিদ্ধান্ত নাও"]},
+{title:"চূড়ান্ত মূল্যায়ন",goal:"পরবর্তী Quarter-এর পরিকল্পনা",tasks:["৯০ দিনের সব সাফল্য ও ব্যর্থতার তালিকা দেখো","সবচেয়ে সফল ৩টি কাজ ও ৩টি ভুল লিখো","কাস্টমার সাড়া না দিলে কী পরিবর্তন দরকার নির্ধারণ করো","সার্ভিস স্কেল করার ব্লুপ্রিন্ট তৈরি করো","পরবর্তী Quarter-এর আউটরিচ ও আয়ের লক্ষ্য চূড়ান্ত করো","নতুন উদ্যমে পরবর্তী দিনপঞ্জি প্রস্তুত করো!"]}
+];
+
+const budgetCategories = [
+  "ইন্টারনেট / যোগাযোগ","যাতায়াত","ডেমো / পোর্টফোলিও",
+  "পরীক্ষামূলক প্রচার","টুলস / সফটওয়্যার","জরুরি রিজার্ভ"
+];
+
+/* ============================================================
+   ২. স্টেট
+   ============================================================ */
+const STORE = "business_quarterly_v3";
+const SYNC_URL_KEY = "business_sync_url";
+const LAST_SYNC_KEY = "business_last_sync";
+const AUTO_SYNC_KEY = "business_auto_sync";
+
+function defaultState(){
+  return { quarters: [], activeQId: null, theme: "light" };
+}
+
+function defaultQuarter(name, startDate){
+  const start = new Date(startDate);
+  const end = new Date(start.getTime() + 89*24*60*60*1000);
+  return {
+    id: "q_" + Date.now() + "_" + Math.random().toString(36).slice(2,6),
+    name: name || "Quarter 1",
+    startDate: start.toISOString().slice(0,10),
+    endDate: end.toISOString().slice(0,10),
+    createdAt: new Date().toISOString(),
+    targetText: "", targetIncome: "", targetCustomers: "", targetProfit: "",
+    strategy: "", tasks: {}, budget: {}, plannedBudget: {}, kpi: {},
+    pipeline: {new:0, contact:0, offer:0, sold:0}, notes: ""
+  };
+}
+
+let state = defaultState();
+try{
+  const raw = localStorage.getItem(STORE);
+  if(raw){
+    const loaded = JSON.parse(raw);
+    state = Object.assign(defaultState(), loaded);
+    if(!Array.isArray(state.quarters)) state.quarters = [];
+  }
+}catch(e){ state = defaultState(); }
+
+function save(){
+  try{ localStorage.setItem(STORE, JSON.stringify(state)); }
+  catch(e){ console.warn("Save failed:", e); }
+}
+
+/* Sync config */
+let syncUrl = localStorage.getItem(SYNC_URL_KEY) || "";
+let lastSyncTime = localStorage.getItem(LAST_SYNC_KEY) || "";
+let autoSyncEnabled = localStorage.getItem(AUTO_SYNC_KEY) === "true";
+
+/* ============================================================
+   ৩. হেল্পার
+   ============================================================ */
+const BN_DIGITS = "০১২৩৪৫৬৭৮৯";
+function bn(n){ return String(n).replace(/\d/g, d => BN_DIGITS[d]); }
+function today(){
+  const d = new Date();
+  return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+}
+function formatDate(iso){
+  if(!iso) return "—";
+  const [y,m,d] = iso.split("-");
+  const months = ["জানু","ফেব","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগ","সেপ","অক্টো","নভে","ডিসে"];
+  return parseInt(d) + " " + months[parseInt(m)-1] + " " + y;
+}
+function toast(msg, type){
+  const t = document.getElementById("toast");
+  if(!t) return;
+  t.textContent = msg;
+  t.className = "toast show" + (type ? " " + type : "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>t.classList.remove("show"), 2400);
+}
+function getActiveQuarter(){
+  if(!state.activeQId) return null;
+  return state.quarters.find(q => q.id === state.activeQId) || null;
+}
+function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
+
+/* ============================================================
+   ৪. হিসাব
+   ============================================================ */
+function qIncome(q){
+  let sum = 0;
+  for(let i=0;i<13;i++){ if(q.kpi[i]) sum += num(q.kpi[i].m); }
+  return sum;
+}
+function qExpense(q){
+  let sum = 0;
+  for(const k in q.budget){ sum += num(q.budget[k]); }
+  return sum;
+}
+function qProfit(q){ return qIncome(q) - qExpense(q); }
+function qSold(q){
+  let sum = 0;
+  for(let i=0;i<13;i++){ if(q.kpi[i]) sum += num(q.kpi[i].s); }
+  return sum;
+}
+function qTasksDone(q){
+  let n = 0;
+  for(let i=1;i<=90;i++) if(q.tasks["d_"+i]) n++;
+  return n;
+}
+function qCustomers(q){ return (q.pipeline && q.pipeline.sold) || 0; }
+
+/* ============================================================
+   ৫. Google Sheet Sync
+   ============================================================ */
+function updateSyncStatus(status, timeStr){
+  const statusEl = document.getElementById("syncStatus");
+  const badgeEl = document.getElementById("syncBadge");
+  const quickBtn = document.getElementById("quickSyncBtn");
+  
+  if(!statusEl) return;
+  
+  if(!syncUrl){
+    statusEl.textContent = "⚪ Synced নেই";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "⚙️ Settings-এ URL দাও"; badgeEl.className = "sync-badge"; }
+    if(quickBtn) quickBtn.className = "icon-btn";
+    return;
+  }
+  
+  if(status === "syncing"){
+    statusEl.textContent = "⏳ Syncing...";
+    statusEl.className = "sync-status";
+    if(quickBtn) quickBtn.className = "icon-btn";
+  } else if(status === "success"){
+    const t = timeStr || new Date().toLocaleTimeString("bn-BD");
+    statusEl.textContent = "✅ Synced";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "✅ শেষ Sync: " + t; badgeEl.className = "sync-badge active"; }
+    if(quickBtn) quickBtn.className = "icon-btn synced";
+  } else if(status === "error"){
+    statusEl.textContent = "❌ Sync ব্যর্থ";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "❌ Sync ব্যর্থ"; badgeEl.className = "sync-badge"; }
+    if(quickBtn) quickBtn.className = "icon-btn error";
+  } else {
+    statusEl.textContent = "⚪ Synced নেই";
+    if(badgeEl){ badgeEl.textContent = "⚪ Synced হয়নি"; badgeEl.className = "sync-badge"; }
+  }
+}
+
+async function syncToSheet(showMsg){
+  if(!syncUrl){
+    if(showMsg !== false) toast("⚠️ আগে Settings-এ Web App URL দাও", "error");
+    return false;
+  }
+  
+  updateSyncStatus("syncing");
+  if(showMsg !== false) toast("☁️ Google Sheet-এ সেভ হচ্ছে...");
+  
+  try{
+    const payload = encodeURIComponent(JSON.stringify(state));
+    const url = syncUrl + "?action=save&data=" + payload;
+    
+    const response = await fetch(url, { method: "GET" });
+    const result = await response.json();
+    
+    if(result.ok){
+      const t = new Date().toLocaleTimeString("bn-BD");
+      lastSyncTime = t;
+      localStorage.setItem(LAST_SYNC_KEY, t);
+      updateSyncStatus("success", t);
+      if(showMsg !== false) toast("✅ Google Sheet-এ সেভ হয়েছে!", "success");
+      return true;
+    } else {
+      updateSyncStatus("error");
+      if(showMsg !== false) toast("❌ ব্যর্থ: " + (result.error || "Unknown"), "error");
+      return false;
+    }
+  }catch(err){
+    console.error(err);
+    updateSyncStatus("error");
+    if(showMsg !== false) toast("❌ Network সমস্যা: " + err.message, "error");
+    return false;
+  }
+}
+
+async function loadFromSheet(){
+  if(!syncUrl){
+    toast("⚠️ আগে Settings-এ Web App URL দাও", "error");
+    return;
+  }
+  
+  if(!confirm("Google Sheet থেকে লোড করলে বর্তমান ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
+  
+  toast("⬇️ Google Sheet থেকে লোড হচ্ছে...");
+  
+  try{
+    const url = syncUrl + "?action=load";
+    const response = await fetch(url, { method: "GET" });
+    const result = await response.json();
+    
+    if(result.ok && result.data){
+      state = Object.assign(defaultState(), result.data);
+      if(!Array.isArray(state.quarters)) state.quarters = [];
+      save();
+      toast("✅ ডেটা লোড হয়েছে! রিফ্রেশ হচ্ছে...", "success");
+      setTimeout(() => location.reload(), 800);
+    } else if(result.ok && !result.data){
+      toast("⚠️ Google Sheet-এ কোনো ডেটা নেই", "error");
+    } else {
+      toast("❌ Load ব্যর্থ: " + (result.error || "Unknown"), "error");
+    }
+  }catch(err){
+    console.error(err);
+    toast("❌ Network সমস্যা: " + err.message, "error");
+  }
+}
+
+async function testConnection(){
+  if(!syncUrl){
+    toast("⚠️ আগে URL সেভ করো", "error");
+    return;
+  }
+  toast("🔍 Testing...");
+  try{
+    const response = await fetch(syncUrl + "?action=ping");
+    const result = await response.json();
+    if(result.ok){
+      toast("✅ সংযোগ কাজ করছে! " + (result.message || ""), "success");
+    } else {
+      toast("❌ সার্ভার উত্তর দিয়েছে কিন্তু সঠিক না", "error");
+    }
+  }catch(err){
+    toast("❌ সংযোগ ব্যর্থ: " + err.message, "error");
+  }
+}
+
+async function clearSheet(){
+  if(!syncUrl){
+    toast("⚠️ আগে URL সেভ করো", "error");
+    return;
+  }
+  if(!confirm("⚠️ Google Sheet-এর সব ডেটা মুছে যাবে। এই কাজ ফিরিয়ে আনা যাবে না। চালিয়ে যাব?")) return;
+  
+  try{
+    const response = await fetch(syncUrl + "?action=clear");
+    const result = await response.json();
+    if(result.ok){
+      toast("🗑️ Google Sheet clear হয়েছে", "success");
+      updateSyncStatus("idle");
+    } else {
+      toast("❌ Clear ব্যর্থ", "error");
+    }
+  }catch(err){
+    toast("❌ Network সমস্যা", "error");
+  }
+}
+
+function startAutoSync(){
+  if(window._autoSyncTimer) clearInterval(window._autoSyncTimer);
+  if(!autoSyncEnabled) return;
+  window._autoSyncTimer = setInterval(() => {
+    if(syncUrl){
+      syncToSheet(false).then(ok => {
+        if(ok) console.log("Auto-synced at", new Date().toLocaleTimeString());
+      });
+    }
+  }, 5 * 60 * 1000); // 5 মিনিট
+}
+
+/* ============================================================
+   ৬. Quarter তৈরি
+   ============================================================ */
+function createQuarter(startDate, customName){
+  if(!startDate) startDate = today();
+  const qNum = state.quarters.length + 1;
+  const q = defaultQuarter(customName || "Quarter " + qNum, startDate);
+
+  if(state.quarters.length > 0){
+    const prev = state.quarters[state.quarters.length - 1];
+    const prevIncome = qIncome(prev);
+    const prevProfit = qProfit(prev);
+    const prevSold = qSold(prev);
+    q.targetIncome = prevIncome > 0 ? String(Math.round(prevIncome * 1.2)) : "";
+    q.targetProfit = prevProfit > 0 ? String(Math.round(prevProfit * 1.2)) : "";
+    q.targetCustomers = prevSold > 0 ? String(Math.max(1, Math.round(prevSold * 1.2))) : "৩";
+    q.targetText = "আগের Quarter থেকে ২০% বেশি অর্জন করা";
+  } else {
+    q.targetIncome = "৩০০০";
+    q.targetProfit = "১৫০০";
+    q.targetCustomers = "৩";
+    q.targetText = "প্রথম Quarter-এ ৩ জন পেইড কাস্টমার পাওয়া";
+  }
+
+  state.quarters.push(q);
+  state.activeQId = q.id;
+  save();
+  return q;
+}
+
+/* ============================================================
+   ৭. Quarter UI
+   ============================================================ */
+function renderQuarterSelect(){
+  const sel = document.getElementById("quarterSelect");
+  if(!sel) return;
+  sel.innerHTML = "";
+  state.quarters.forEach(q => {
+    const o = document.createElement("option");
+    o.value = q.id;
+    o.textContent = `${q.name} (${formatDate(q.startDate)} → ${formatDate(q.endDate)})`;
+    if(q.id === state.activeQId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function renderQuarterStatus(){
+  const q = getActiveQuarter();
+  const el = document.getElementById("qStatus");
+  if(!q || !el){ if(el) el.textContent = "—"; return; }
+  const start = new Date(q.startDate);
+  const now = new Date();
+  const diff = Math.floor((now - start) / (1000*60*60*24));
+  const remain = Math.max(0, 90 - diff);
+  if(diff < 0){
+    el.textContent = `🔵 শুরু হবে ${formatDate(q.startDate)}-এ`;
+  } else if(diff >= 90){
+    el.textContent = `🔴 সম্পন্ন হয়েছে`;
+  } else {
+    el.textContent = `🟢 দিন ${bn(diff+1)}/৯০ · বাকি ${bn(remain)} দিন`;
+  }
+}
+
+/* ============================================================
+   ৮. KPI Chart
+   ============================================================ */
+function renderKPIChart(){
+  const barsEl = document.getElementById("kpiChartBars");
+  const yAxisEl = document.getElementById("kpiChartYAxis");
+  if(!barsEl || !yAxisEl) return;
+  const q = getActiveQuarter();
+  if(!q) return;
+
+  const vals = [];
+  for(let i = 0; i < 13; i++) vals.push(q.kpi[i] ? num(q.kpi[i].m) : 0);
+
+  const dataMax = Math.max.apply(null, vals.concat([100]));
+  const mag = Math.pow(10, Math.floor(Math.log10(dataMax || 1)));
+  const maxV = Math.ceil(dataMax / mag) * mag || 100;
+
+  let yHTML = "";
+  for(let i = 4; i >= 0; i--){
+    yHTML += '<span>৳' + bn(Math.round(maxV/4*i)) + '</span>';
+  }
+  yAxisEl.innerHTML = yHTML;
+
+  let barsHTML = "";
+  vals.forEach((v, i) => {
+    const pct = maxV > 0 ? (v / maxV) * 100 : 0;
+    const isEmpty = v === 0;
+    const hasValue = v > 0;
+    barsHTML += '<div class="chart-bar-wrap ' + (hasValue ? 'has-value' : '') + '" title="সপ্তাহ ' + bn(i+1) + ': ৳' + bn(v) + '">' +
+      '<div class="chart-bar-value">' + (hasValue ? '৳' + bn(v) : '') + '</div>' +
+      '<div class="chart-bar ' + (isEmpty ? 'empty' : '') + '" style="height:' + Math.max(2, pct) + '%"></div>' +
+      '<div class="chart-bar-label">স' + bn(i+1) + '</div>' +
+      '<div class="chart-bar-dot"></div></div>';
+  });
+  barsEl.innerHTML = barsHTML;
+
+  barsEl.querySelectorAll(".chart-bar-wrap").forEach((bar, i) => {
+    bar.addEventListener("click", () => {
+      toast("সপ্তাহ " + (i+1) + ": ৳" + bn(vals[i]) + " আয়");
+    });
+  });
+}
+
+/* ============================================================
+   ৯. Quarter Comparison Chart
+   ============================================================ */
+function renderCompareChart(metric){
+  const container = document.getElementById("compareChart");
+  if(!container) return;
+  container.innerHTML = "";
+  if(state.quarters.length === 0) return;
+
+  const values = state.quarters.map(q => {
+    switch(metric){
+      case "income": return qIncome(q);
+      case "profit": return qProfit(q);
+      case "customers": return qCustomers(q);
+      case "expense": return qExpense(q);
+      case "tasks": return qTasksDone(q);
+      default: return 0;
+    }
+  });
+
+  const maxV = Math.max.apply(null, values.concat([1]));
+  const unit = (metric === "customers" || metric === "tasks") ? "" : "৳";
+  const activeIdx = state.quarters.findIndex(q => q.id === state.activeQId);
+
+  state.quarters.forEach((q, i) => {
+    const v = values[i];
+    const pct = (v / maxV) * 100;
+    const isActive = i === activeIdx;
+    const isEmpty = v === 0;
+
+    const bar = document.createElement("div");
+    bar.className = "cc-bar" + (isActive ? " active" : "") + (isEmpty ? " empty" : "");
+    bar.title = `${q.name}: ${unit}${bn(v)}`;
+    bar.innerHTML = `
+      <div class="cc-value ${v > 0 ? 'show' : ''}">${v > 0 ? unit + bn(v) : ''}</div>
+      <div class="cc-bar-fill" style="height:${Math.max(2, pct)}%"></div>
+      <div class="cc-label">${q.name.replace('Quarter ', 'Q')}</div>
+    `;
+    bar.addEventListener("click", () => switchQuarter(q.id));
+    container.appendChild(bar);
+  });
+}
+
+/* ============================================================
+   ১০. Dashboard
+   ============================================================ */
+function renderDashboard(){
+  const q = getActiveQuarter();
+  const el = document.getElementById("dashboard");
+  if(!q || !el) return;
+
+  const income = qIncome(q);
+  const expense = qExpense(q);
+  const profit = qProfit(q);
+  const sold = qSold(q);
+  const tasks = qTasksDone(q);
+  const tasksPct = Math.round(tasks/90*100);
+
+  const targetIncome = num(q.targetIncome);
+  const targetProfit = num(q.targetProfit);
+  const targetCustomers = num(q.targetCustomers);
+
+  const incomePct = targetIncome > 0 ? Math.round((income/targetIncome)*100) : 0;
+  const profitPct = targetProfit > 0 ? Math.round((profit/targetProfit)*100) : 0;
+  const custPct = targetCustomers > 0 ? Math.round((sold/targetCustomers)*100) : 0;
+
+  el.innerHTML = `
+    <div class="dash-card green">
+      <div class="dash-icon">💰</div>
+      <div class="dash-value">৳${bn(income)}</div>
+      <div class="dash-label">মোট আয়</div>
+      <div class="dash-sub">${targetIncome > 0 ? 'Target: ৳'+bn(targetIncome)+' ('+bn(incomePct)+'%)' : 'Target সেট করো'}</div>
+    </div>
+    <div class="dash-card orange">
+      <div class="dash-icon">💸</div>
+      <div class="dash-value">৳${bn(expense)}</div>
+      <div class="dash-label">মোট খরচ</div>
+      <div class="dash-sub">${income > 0 ? bn(Math.round(expense/income*100))+'% আয়ের' : '—'}</div>
+    </div>
+    <div class="dash-card ${profit >= 0 ? 'blue' : 'pink'}">
+      <div class="dash-icon">${profit >= 0 ? '📈' : '📉'}</div>
+      <div class="dash-value">৳${bn(profit)}</div>
+      <div class="dash-label">${profit >= 0 ? 'লাভ' : 'ক্ষতি'}</div>
+      <div class="dash-sub">${targetProfit > 0 ? 'Target: ৳'+bn(targetProfit)+' ('+bn(profitPct)+'%)' : 'Target সেট করো'}</div>
+    </div>
+    <div class="dash-card purple">
+      <div class="dash-icon">👥</div>
+      <div class="dash-value">${bn(sold)}</div>
+      <div class="dash-label">পেইড কাস্টমার</div>
+      <div class="dash-sub">${targetCustomers > 0 ? 'Target: '+bn(targetCustomers)+' ('+bn(custPct)+'%)' : 'Target সেট করো'}</div>
+    </div>
+    <div class="dash-card green">
+      <div class="dash-icon">✅</div>
+      <div class="dash-value">${bn(tasks)}</div>
+      <div class="dash-label">টাস্ক সম্পন্ন</div>
+      <div class="dash-sub">${bn(tasksPct)}% অগ্রগতি</div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   ১১. Overview
+   ============================================================ */
+function renderOverview(){
+  const q = getActiveQuarter();
+  if(!q) return;
+  const tasks = qTasksDone(q);
+  const pct = Math.round(tasks/90*100);
+  const CIRC = 2 * Math.PI * 45;
+  const ringFill = document.getElementById("ringFill");
+  if(ringFill) ringFill.style.strokeDashoffset = CIRC - (pct/100)*CIRC;
+  const ringText = document.getElementById("ringText");
+  if(ringText) ringText.textContent = bn(pct)+"%";
+  const info = document.getElementById("progressTitle");
+  const desc = document.getElementById("progressDesc");
+  if(info && desc){
+    if(tasks === 0){ info.textContent = "শুরু করো!"; desc.textContent = "টাস্ক ট্যাবে গিয়ে কাজ শুরু করো।"; }
+    else if(tasks < 30){ info.textContent = "শুরু হয়েছে! 🌱"; desc.textContent = bn(tasks)+"টি টাস্ক শেষ। চালিয়ে যাও!"; }
+    else if(tasks < 60){ info.textContent = "অর্ধেক পথ! 🚀"; desc.textContent = bn(tasks)+"টি টাস্ক সম্পন্ন।"; }
+    else if(tasks < 90){ info.textContent = "শেষের দিকে! 🔥"; desc.textContent = "মাত্র "+bn(90-tasks)+"টি বাকি।"; }
+    else { info.textContent = "সম্পূর্ণ! 🏆"; desc.textContent = "সব টাস্ক শেষ!"; }
+  }
+  const tTextEl = document.getElementById("qTargetText");
+  const tIncEl = document.getElementById("qTargetIncome");
+  const tCustEl = document.getElementById("qTargetCustomers");
+  const tProfEl = document.getElementById("qTargetProfit");
+  const stratEl = document.getElementById("qStrategy");
+  if(tTextEl) tTextEl.value = q.targetText || "";
+  if(tIncEl) tIncEl.value = q.targetIncome || "";
+  if(tCustEl) tCustEl.value = q.targetCustomers || "";
+  if(tProfEl) tProfEl.value = q.targetProfit || "";
+  if(stratEl) stratEl.value = q.strategy || "";
+}
+
+function bindOverviewInputs(){
+  const fields = [
+    ["qTargetText","targetText"],["qTargetIncome","targetIncome"],
+    ["qTargetCustomers","targetCustomers"],["qTargetProfit","targetProfit"],
+    ["qStrategy","strategy"]
+  ];
+  fields.forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    if(!el) return;
+    el.addEventListener("input", (e) => {
+      const q = getActiveQuarter();
+      if(!q) return;
+      q[key] = e.target.value;
+      save();
+      renderDashboard();
+    });
+  });
+}
+
+/* ============================================================
+   ১২. Tasks
+   ============================================================ */
+function renderWeekSelect(){
+  const sel = document.getElementById("weekSelect");
+  if(!sel) return;
+  sel.innerHTML = "";
+  weekTemplates.forEach((w, i) => {
+    const o = document.createElement("option");
+    o.value = i;
+    o.textContent = `সপ্তাহ ${i+1} — ${w.title}`;
+    sel.appendChild(o);
+  });
+}
+
+function renderWeek(idx){
+  const q = getActiveQuarter();
+  if(!q) return;
+  if(idx < 0 || idx >= weekTemplates.length) idx = 0;
+  const w = weekTemplates[idx];
+  const start = new Date(q.startDate);
+  const wStart = new Date(start.getTime() + (idx*7)*24*60*60*1000);
+  const wEnd = new Date(start.getTime() + Math.min((idx+1)*7-1, 89)*24*60*60*1000);
+  document.getElementById("weekTitle").textContent = `সপ্তাহ ${idx+1} · দিন ${idx*7+1}–${Math.min((idx+1)*7,90)}`;
+  document.getElementById("weekDates").textContent = formatDate(wStart.toISOString().slice(0,10)) + " → " + formatDate(wEnd.toISOString().slice(0,10));
+  document.getElementById("weekGoal").textContent = w.goal;
+  const grid = document.getElementById("dayGrid");
+  grid.innerHTML = "";
+  const frag = document.createDocumentFragment();
+  w.tasks.forEach((task, j) => {
+    const dayNum = idx*7 + j + 1;
+    const key = "d_" + dayNum;
+    const done = !!q.tasks[key];
+    const div = document.createElement("div");
+    div.className = "day-item" + (done ? " done" : "");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = key;
+    cb.checked = done;
+    cb.addEventListener("change", (e) => {
+      const q2 = getActiveQuarter();
+      if(!q2) return;
+      q2.tasks[key] = e.target.checked;
+      save();
+      div.classList.toggle("done", e.target.checked);
+      renderDashboard(); renderOverview(); renderSummary(); updateSticky();
+    });
+    const label = document.createElement("label");
+    label.htmlFor = key;
+    label.style.cursor = "pointer";
+    label.style.flex = "1";
+    label.innerHTML = `<span class="day-num">দিন ${bn(dayNum)}</span><div class="day-text">${task}</div>`;
+    div.appendChild(cb);
+    div.appendChild(label);
+    frag.appendChild(div);
+  });
+  grid.appendChild(frag);
+}
+
+function bindWeekNav(){
+  const sel = document.getElementById("weekSelect");
+  const prev = document.getElementById("prevWeek");
+  const next = document.getElementById("nextWeek");
+  if(!sel) return;
+  sel.addEventListener("change", () => renderWeek(Number(sel.value)));
+  if(prev) prev.addEventListener("click", () => {
+    let v = Number(sel.value);
+    if(v > 0){ sel.value = v-1; renderWeek(v-1); }
+  });
+  if(next) next.addEventListener("click", () => {
+    let v = Number(sel.value);
+    if(v < weekTemplates.length-1){ sel.value = v+1; renderWeek(v+1); }
+  });
+}
+
+/* ============================================================
+   ১৩. Budget
+   ============================================================ */
+function renderBudget(){
+  const q = getActiveQuarter();
+  const tbody = document.getElementById("budgetBody");
+  if(!q || !tbody) return;
+  tbody.innerHTML = "";
+  const defaultPlanned = [1000, 1500, 1000, 1500, 1000, 4000];
+  budgetCategories.forEach((cat, i) => {
+    const planned = q.plannedBudget[i] != null ? q.plannedBudget[i] : (defaultPlanned[i] || "");
+    const actual = q.budget[i] != null ? q.budget[i] : "";
+    const over = num(actual) > num(planned);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${cat}</td>
+      <td><input type="number" min="0" value="${planned}" data-pb="${i}" placeholder="০" style="width:100px"></td>
+      <td><input type="number" min="0" value="${actual}" data-ab="${i}" placeholder="০" style="width:100px"></td>
+      <td style="font-weight:600;color:${over ? 'var(--danger)' : 'var(--brand)'}">${over ? '⚠️ বেশি' : '✅ ঠিক'}</td>
+    `;
+    tr.querySelector("[data-pb]").addEventListener("input", (e) => {
+      const q2 = getActiveQuarter();
+      if(!q2) return;
+      q2.plannedBudget[i] = e.target.value;
+      save(); renderBudget(); renderDashboard();
+    });
+    tr.querySelector("[data-ab]").addEventListener("input", (e) => {
+      const q2 = getActiveQuarter();
+      if(!q2) return;
+      q2.budget[i] = e.target.value;
+      save(); renderBudget(); renderDashboard();
+      renderCompareChart(currentMetric);
+    });
+    tbody.appendChild(tr);
+  });
+  let plannedTotal = 0, actualTotal = 0;
+  budgetCategories.forEach((_, i) => {
+    const p = q.plannedBudget[i] != null ? q.plannedBudget[i] : (defaultPlanned[i] || 0);
+    const a = q.budget[i] != null ? q.budget[i] : 0;
+    plannedTotal += num(p);
+    actualTotal += num(a);
+  });
+  document.getElementById("budgetTotal").textContent = "৳" + bn(actualTotal);
+  const remain = plannedTotal - actualTotal;
+  const remEl = document.getElementById("budgetRemain");
+  if(remain >= 0){
+    remEl.textContent = "বাকি: ৳" + bn(remain);
+    remEl.style.color = "var(--brand)";
+  } else {
+    remEl.textContent = "⚠️ " + bn(Math.abs(remain)) + " বেশি";
+    remEl.style.color = "var(--danger)";
+  }
+}
+
+/* ============================================================
+   ১৪. KPI
+   ============================================================ */
+function renderKPI(){
+  const q = getActiveQuarter();
+  const tbody = document.getElementById("kpiBody");
+  if(!q || !tbody) return;
+  tbody.innerHTML = "";
+  weekTemplates.forEach((w, i) => {
+    const k = q.kpi[i] || {};
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>সপ্তাহ ${bn(i+1)}</strong></td>
+      <td><input type="number" value="${k.c||''}" data-k="${i}" data-f="c" placeholder="০" style="width:70px"></td>
+      <td><input type="number" value="${k.r||''}" data-k="${i}" data-f="r" placeholder="০" style="width:70px"></td>
+      <td><input type="number" value="${k.o||''}" data-k="${i}" data-f="o" placeholder="০" style="width:70px"></td>
+      <td><input type="number" value="${k.s||''}" data-k="${i}" data-f="s" placeholder="০" style="width:70px"></td>
+      <td><input type="number" value="${k.m||''}" data-k="${i}" data-f="m" placeholder="৳০" style="width:90px"></td>
+    `;
+    tr.querySelectorAll("input").forEach(inp => {
+      const handler = (e) => {
+        const q2 = getActiveQuarter();
+        if(!q2) return;
+        q2.kpi[i] = q2.kpi[i] || {};
+        q2.kpi[i][inp.dataset.f] = e.target.value;
+        save();
+        updateKPITotals();
+        renderDashboard();
+        renderKPIChart();
+        if(inp.dataset.f === "m") renderCompareChart(currentMetric);
+      };
+      inp.addEventListener("input", handler);
+      inp.addEventListener("change", handler);
+    });
+    tbody.appendChild(tr);
+  });
+  updateKPITotals();
+  renderKPIChart();
+}
+
+function updateKPITotals(){
+  const q = getActiveQuarter();
+  if(!q) return;
+  let totalSold = 0, totalIncome = 0;
+  for(let i=0;i<13;i++){
+    const k = q.kpi[i];
+    if(k){ totalSold += num(k.s); totalIncome += num(k.m); }
+  }
+  const soldEl = document.getElementById("kpiTotalSold");
+  const incEl = document.getElementById("kpiTotalIncome");
+  if(soldEl) soldEl.textContent = bn(totalSold);
+  if(incEl) incEl.textContent = "৳"+bn(totalIncome);
+}
+
+/* ============================================================
+   ১৫. Pipeline
+   ============================================================ */
+function renderPipeline(){
+  const q = getActiveQuarter();
+  if(!q) return;
+  const p = q.pipeline || {new:0,contact:0,offer:0,sold:0};
+  document.getElementById("pipeNew").textContent = bn(p.new||0);
+  document.getElementById("pipeContact").textContent = bn(p.contact||0);
+  document.getElementById("pipeOffer").textContent = bn(p.offer||0);
+  document.getElementById("pipeSold").textContent = bn(p.sold||0);
+}
+
+function bindPipeline(){
+  document.querySelectorAll(".pipe-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const q = getActiveQuarter();
+      if(!q) return;
+      q.pipeline = q.pipeline || {new:0,contact:0,offer:0,sold:0};
+      const stage = btn.dataset.stage;
+      const action = btn.dataset.action;
+      if(action === "add") q.pipeline[stage] = (q.pipeline[stage]||0) + 1;
+      else q.pipeline[stage] = Math.max(0, (q.pipeline[stage]||0) - 1);
+      save(); renderPipeline(); renderDashboard();
+    });
+  });
+}
+
+/* ============================================================
+   ১৬. Notes
+   ============================================================ */
+function renderNotes(){
+  const q = getActiveQuarter();
+  const area = document.getElementById("notesArea");
+  if(!q || !area) return;
+  area.value = q.notes || "";
+  area.style.height = "auto";
+  area.style.height = Math.max(120, area.scrollHeight) + "px";
+}
+
+function bindNotes(){
+  const area = document.getElementById("notesArea");
+  const saveBtn = document.getElementById("saveNotes");
+  const clearBtn = document.getElementById("clearNotes");
+  if(!area) return;
+  area.addEventListener("input", () => {
+    area.style.height = "auto";
+    area.style.height = Math.max(120, area.scrollHeight) + "px";
+  });
+  if(saveBtn) saveBtn.addEventListener("click", () => {
+    const q = getActiveQuarter();
+    if(!q) return;
+    q.notes = area.value;
+    save(); toast("নোট সেভ হয়েছে!", "success");
+  });
+  if(clearBtn) clearBtn.addEventListener("click", () => {
+    if(confirm("নোট মুছে ফেলতে চাও?")){
+      const q = getActiveQuarter();
+      if(!q) return;
+      area.value = ""; q.notes = ""; save();
+      toast("নোট মুছে ফেলা হয়েছে");
+    }
+  });
+}
+
+/* ============================================================
+   ১৭. Compare Tab
+   ============================================================ */
+let currentMetric = "income";
+
+function bindMetricSwitch(){
+  document.querySelectorAll(".metric-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".metric-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentMetric = btn.dataset.metric;
+      renderCompareChart(currentMetric);
+    });
+  });
+}
+
+function renderCompareTable(){
+  const tbody = document.getElementById("compareTableBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  state.quarters.forEach(q => {
+    const income = qIncome(q);
+    const expense = qExpense(q);
+    const profit = qProfit(q);
+    const cust = qCustomers(q);
+    const tasks = qTasksDone(q);
+    const isActive = q.id === state.activeQId;
+    const tr = document.createElement("tr");
+    if(isActive) tr.style.background = "var(--soft)";
+    tr.innerHTML = `
+      <td><strong>${q.name}</strong>${isActive ? ' <span style="color:var(--brand)">●</span>' : ''}</td>
+      <td style="font-size:.8rem">${formatDate(q.startDate)} → ${formatDate(q.endDate)}</td>
+      <td>৳${bn(income)}</td>
+      <td>৳${bn(expense)}</td>
+      <td style="color:${profit >= 0 ? 'var(--brand)' : 'var(--danger)'};font-weight:700">৳${bn(profit)}</td>
+      <td>${bn(cust)}</td>
+      <td>${bn(tasks)}/৯০</td>
+    `;
+    tr.style.cursor = "pointer";
+    tr.addEventListener("click", () => switchQuarter(q.id));
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   ১৮. Summary
+   ============================================================ */
+function renderSummary(){
+  const dash = document.getElementById("summaryDashboard");
+  if(!dash) return;
+  let totalIncome = 0, totalExpense = 0, totalSold = 0, totalTasks = 0;
+  state.quarters.forEach(q => {
+    totalIncome += qIncome(q);
+    totalExpense += qExpense(q);
+    totalSold += qSold(q);
+    totalTasks += qTasksDone(q);
+  });
+  const totalProfit = totalIncome - totalExpense;
+  const totalTasksPossible = state.quarters.length * 90;
+  dash.innerHTML = `
+    <div class="dash-card green">
+      <div class="dash-icon">💰</div>
+      <div class="dash-value">৳${bn(totalIncome)}</div>
+      <div class="dash-label">মোট আয়</div>
+      <div class="dash-sub">${bn(state.quarters.length)} Quarter-এ</div>
+    </div>
+    <div class="dash-card orange">
+      <div class="dash-icon">💸</div>
+      <div class="dash-value">৳${bn(totalExpense)}</div>
+      <div class="dash-label">মোট খরচ</div>
+      <div class="dash-sub">${totalIncome > 0 ? bn(Math.round(totalExpense/totalIncome*100))+'% আয়ের' : '—'}</div>
+    </div>
+    <div class="dash-card ${totalProfit >= 0 ? 'blue' : 'pink'}">
+      <div class="dash-icon">${totalProfit >= 0 ? '📈' : '📉'}</div>
+      <div class="dash-value">৳${bn(totalProfit)}</div>
+      <div class="dash-label">${totalProfit >= 0 ? 'মোট লাভ' : 'মোট ক্ষতি'}</div>
+      <div class="dash-sub">সব Quarter মিলিয়ে</div>
+    </div>
+    <div class="dash-card purple">
+      <div class="dash-icon">👥</div>
+      <div class="dash-value">${bn(totalSold)}</div>
+      <div class="dash-label">মোট পেইড কাস্টমার</div>
+      <div class="dash-sub">${bn(state.quarters.length)} Quarter-এ</div>
+    </div>
+    <div class="dash-card green">
+      <div class="dash-icon">✅</div>
+      <div class="dash-value">${bn(totalTasks)}</div>
+      <div class="dash-label">মোট টাস্ক সম্পন্ন</div>
+      <div class="dash-sub">${totalTasksPossible > 0 ? bn(Math.round(totalTasks/totalTasksPossible*100))+'%' : '০%'}</div>
+    </div>
+  `;
+
+  const tbody = document.getElementById("growthTableBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  state.quarters.forEach((q, i) => {
+    const income = qIncome(q);
+    const profit = qProfit(q);
+    const cust = qCustomers(q);
+    let changeHTML = "—";
+    if(i > 0){
+      const prev = state.quarters[i-1];
+      const prevIncome = qIncome(prev);
+      if(prevIncome > 0){
+        const pct = Math.round((income - prevIncome) / prevIncome * 100);
+        const cls = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
+        const sign = pct > 0 ? "+" : "";
+        changeHTML = `<span class="growth-badge ${cls}">${sign}${bn(pct)}%</span>`;
+      } else if(income > 0){
+        changeHTML = `<span class="growth-badge up">নতুন</span>`;
+      }
+    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${q.name}</strong></td>
+      <td>৳${bn(income)}</td>
+      <td style="color:${profit >= 0 ? 'var(--brand)' : 'var(--danger)'};font-weight:700">৳${bn(profit)}</td>
+      <td>${bn(cust)}</td>
+      <td>${changeHTML}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   ১৯. Quarter Switch
+   ============================================================ */
+function switchQuarter(id){
+  state.activeQId = id;
+  save();
+  renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+  toast("Quarter পরিবর্তন হয়েছে");
+}
+
+function renderAllQuarterData(){
+  renderDashboard(); renderOverview(); renderWeek(0); renderBudget();
+  renderKPI(); renderPipeline(); renderNotes(); renderCompareChart(currentMetric);
+  renderCompareTable(); renderSummary(); updateSticky();
+}
+
+/* ============================================================
+   ২০. Modal — নতুন Quarter
+   ============================================================ */
+function showNewQuarterModal(){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  if(!overlay || !content) return;
+
+  const lastQ = state.quarters[state.quarters.length - 1];
+  let suggestedStart = today();
+  if(lastQ){
+    const lastEnd = new Date(lastQ.endDate);
+    const dayAfter = new Date(lastEnd.getTime() + 24*60*60*1000);
+    suggestedStart = dayAfter.toISOString().slice(0,10);
+  }
+
+  content.innerHTML = `
+    <h3>➕ নতুন Quarter শুরু করো</h3>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
+      ${lastQ ? 'আগের Quarter শেষ হয়েছে ' + formatDate(lastQ.endDate) + '-এ।' : 'এটি তোমার প্রথম Quarter।'}
+    </p>
+    <div class="info-field">
+      <label>Quarter-এর নাম</label>
+      <input type="text" id="newQName" value="Quarter ${state.quarters.length+1}">
+    </div>
+    <div class="info-field">
+      <label>শুরুর তারিখ</label>
+      <input type="date" id="newQStart" value="${suggestedStart}">
+    </div>
+    <div class="info-field">
+      <label>Target (অটো প্রস্তাব — পরে এডিট করতে পারবে)</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+        <input type="number" id="newQTargetIncome" placeholder="আয় ৳" value="${lastQ ? Math.round(qIncome(lastQ)*1.2) : 3000}">
+        <input type="number" id="newQTargetCustomers" placeholder="কাস্টমার" value="${lastQ ? Math.max(1, Math.round(qSold(lastQ)*1.2)) : 3}">
+      </div>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" id="cancelNewQ">বাতিল</button>
+      <button class="btn-primary" id="confirmNewQ">তৈরি করো</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+
+  document.getElementById("cancelNewQ").onclick = () => overlay.classList.remove("show");
+  document.getElementById("confirmNewQ").onclick = () => {
+    const name = document.getElementById("newQName").value.trim() || "Quarter " + (state.quarters.length+1);
+    const start = document.getElementById("newQStart").value || today();
+    const q = createQuarter(start, name);
+    const targetIncome = document.getElementById("newQTargetIncome").value;
+    const targetCustomers = document.getElementById("newQTargetCustomers").value;
+    if(targetIncome) q.targetIncome = targetIncome;
+    if(targetCustomers) q.targetCustomers = targetCustomers;
+    q.targetProfit = q.targetIncome ? String(Math.round(num(q.targetIncome) * 0.5)) : "";
+    save();
+    overlay.classList.remove("show");
+    document.getElementById("emptyState").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
+    document.getElementById("stickyBottom").style.display = "flex";
+    renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+    toast("✅ " + q.name + " তৈরি হয়েছে!", "success");
+  };
+}
+
+/* ============================================================
+   ২১. Settings Modal
+   ============================================================ */
+function openSettings(){
+  document.getElementById("syncUrlInput").value = syncUrl;
+  document.getElementById("autoSyncToggle").checked = autoSyncEnabled;
+  document.getElementById("settingsOverlay").classList.add("show");
+}
+
+function bindSettings(){
+  const overlay = document.getElementById("settingsOverlay");
+  const settingsBtn = document.getElementById("settingsBtn");
+  const saveBtn = document.getElementById("saveSyncUrl");
+  const testBtn = document.getElementById("testSyncUrl");
+  const sendBtn = document.getElementById("syncSendBtn");
+  const loadBtn = document.getElementById("syncLoadBtn");
+  const clearBtn = document.getElementById("syncClearBtn");
+  const closeBtn = document.getElementById("closeSettings");
+  const autoToggle = document.getElementById("autoSyncToggle");
+
+  if(settingsBtn) settingsBtn.addEventListener("click", openSettings);
+  if(closeBtn) closeBtn.addEventListener("click", () => overlay.classList.remove("show"));
+  if(overlay) overlay.addEventListener("click", (e) => {
+    if(e.target === overlay) overlay.classList.remove("show");
+  });
+
+  if(saveBtn) saveBtn.addEventListener("click", () => {
+    const url = document.getElementById("syncUrlInput").value.trim();
+    if(url && !url.startsWith("https://script.google.com/")){
+      toast("⚠️ সঠিক Google Apps Script URL দাও", "error");
+      return;
+    }
+    syncUrl = url;
+    localStorage.setItem(SYNC_URL_KEY, syncUrl);
+    toast("✅ URL সেভ হয়েছে!", "success");
+    updateSyncStatus("idle");
+  });
+
+  if(testBtn) testBtn.addEventListener("click", testConnection);
+  if(sendBtn) sendBtn.addEventListener("click", () => syncToSheet(true));
+  if(loadBtn) loadBtn.addEventListener("click", loadFromSheet);
+  if(clearBtn) clearBtn.addEventListener("click", clearSheet);
+
+  if(autoToggle) autoToggle.addEventListener("change", (e) => {
+    autoSyncEnabled = e.target.checked;
+    localStorage.setItem(AUTO_SYNC_KEY, autoSyncEnabled);
+    startAutoSync();
+    toast(autoSyncEnabled ? "✅ Auto-sync চালু" : "⏸️ Auto-sync বন্ধ");
+  });
+}
+
+/* ============================================================
+   ২২. Tabs
+   ============================================================ */
+function initTabs(){
+  document.querySelectorAll(".tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+      tab.classList.add("active");
+      const target = document.getElementById("tab-" + tab.dataset.tab);
+      if(target) target.classList.add("active");
+      if(tab.dataset.tab === "kpi") renderKPIChart();
+      if(tab.dataset.tab === "compare") renderCompareChart(currentMetric);
+      if(tab.dataset.tab === "summary") renderSummary();
+    });
+  });
+}
+
+/* ============================================================
+   ২৩. Theme
+   ============================================================ */
+function applyTheme(){
+  document.documentElement.setAttribute("data-theme", state.theme);
+  const btn = document.getElementById("themeToggle");
+  if(btn) btn.textContent = state.theme === "dark" ? "☀️" : "🌙";
+}
+
+function initTheme(){
+  const btn = document.getElementById("themeToggle");
+  if(!btn) return;
+  btn.addEventListener("click", () => {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    save(); applyTheme();
+  });
+}
+
+/* ============================================================
+   ২৪. Actions
+   ============================================================ */
+function initActions(){
+  const exp = document.getElementById("exportBtn");
+  const imp = document.getElementById("importBtn");
+  const inp = document.getElementById("importInput");
+  const rst = document.getElementById("resetBtn");
+  const prt = document.getElementById("printBtn");
+  const quickSync = document.getElementById("quickSyncBtn");
+  const quickLoad = document.getElementById("quickLoadBtn");
+
+  if(quickSync) quickSync.addEventListener("click", () => syncToSheet(true));
+  if(quickLoad) quickLoad.addEventListener("click", loadFromSheet);
+
+  if(exp) exp.addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "business_backup_" + today() + ".json";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast("ব্যাকআপ ডাউনলোড হয়েছে!", "success");
+  });
+
+  if(imp && inp){
+    imp.addEventListener("click", () => inp.click());
+    inp.addEventListener("change", (e) => {
+      const f = e.target.files[0];
+      if(!f) return;
+      const r = new FileReader();
+      r.onload = ev => {
+        try{
+          const data = JSON.parse(ev.target.result);
+          state = Object.assign(defaultState(), data);
+          save();
+          toast("ডেটা রিস্টোর হয়েছে!", "success");
+          setTimeout(() => location.reload(), 600);
+        }catch(err){ toast("ভুল ফাইল!", "error"); }
+      };
+      r.readAsText(f);
+    });
+  }
+
+  if(rst) rst.addEventListener("click", () => {
+    if(confirm("সব Quarter ও ডেটা মুছে ফেলতে চাও? এটি ফিরিয়ে আনা যাবে না।")){
+      localStorage.removeItem(STORE);
+      location.reload();
+    }
+  });
+
+  if(prt) prt.addEventListener("click", () => window.print());
+}
+
+/* ============================================================
+   ২৫. Sticky Bottom
+   ============================================================ */
+function updateSticky(){
+  const q = getActiveQuarter();
+  const el = document.getElementById("stickyBottom");
+  const text = document.getElementById("stickyText");
+  const fill = document.getElementById("stickyFill");
+  const qName = document.getElementById("stickyQuarter");
+  if(!q || !el) return;
+  const tasks = qTasksDone(q);
+  const pct = Math.round(tasks/90*100);
+  if(text) text.textContent = bn(tasks)+"/৯০ দিন";
+  if(fill) fill.style.width = pct+"%";
+  if(qName) qName.textContent = q.name;
+}
+
+/* ============================================================
+   ২৬. Init
+   ============================================================ */
+function init(){
+  applyTheme();
+  initTheme();
+  initTabs();
+  initActions();
+  bindSettings();
+  bindWeekNav();
+  bindOverviewInputs();
+  bindPipeline();
+  bindNotes();
+  bindMetricSwitch();
+  
+  const sel = document.getElementById("quarterSelect");
+  if(sel) sel.addEventListener("change", () => switchQuarter(sel.value));
+
+  const newQBtn = document.getElementById("newQuarterBtn");
+  const emptyNewQ = document.getElementById("emptyNewQ");
+  if(newQBtn) newQBtn.addEventListener("click", showNewQuarterModal);
+  if(emptyNewQ) emptyNewQ.addEventListener("click", showNewQuarterModal);
+
+  renderWeekSelect();
+
+  // Sync status প্রাথমিক
+  updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
+  startAutoSync();
+
+  if(state.quarters.length === 0){
+    document.getElementById("emptyState").style.display = "block";
+    document.getElementById("mainApp").style.display = "none";
+    document.getElementById("stickyBottom").style.display = "none";
+    return;
+  }
+
+  if(!state.activeQId || !getActiveQuarter()){
+    state.activeQId = state.quarters[state.quarters.length - 1].id;
+    save();
+  }
+
+  document.getElementById("emptyState").style.display = "none";
+  document.getElementById("mainApp").style.display = "block";
+  document.getElementById("stickyBottom").style.display = "flex";
+
+  renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+
+  setInterval(() => { renderQuarterStatus(); updateSticky(); }, 60000);
+}
+
+if(document.readyState === "loading"){
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
