@@ -34,6 +34,11 @@ body{
 .icon-btn:active{transform:scale(.95)}
 .icon-btn.synced{background:rgba(16,185,129,.4);border-color:rgba(16,185,129,.6)}
 .icon-btn.error{background:rgba(239,68,68,.4);border-color:rgba(239,68,68,.6)}
+.icon-btn.syncing{animation:pulse 1s infinite}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:.5}
+}
 .sync-status{
   font-size:.72rem;color:#fff;background:rgba(255,255,255,.15);
   padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);
@@ -231,7 +236,7 @@ body{
 .sync-help{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
 .sync-help ol{margin:6px 0 0 18px}
 .sync-help code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.85em;color:var(--brand)}
-.sync-url-input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.82rem;font-family:monospace}
+.sync-url-input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.78rem;font-family:monospace}
 .sync-buttons{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .sync-buttons button{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font:inherit;font-weight:600;font-family:inherit;font-size:.85rem;transition:.2s;min-width:100px}
 .btn-sync-save{background:var(--brand);color:#fff}
@@ -273,7 +278,7 @@ body{
   <div class="wrap">
     <div class="logo">💼 ব্যবসা মনিটরিং <span style="font-size:.65rem;opacity:.7;font-weight:400">Cloud Sync</span></div>
     <div class="top-actions">
-      <span class="sync-status" id="syncStatus">⚪ Synced নেই</span>
+      <span class="sync-status" id="syncStatus">⚪ Synced হয়নি</span>
       <button class="icon-btn" id="quickSyncBtn" title="Google Sheet-এ সেভ">☁️</button>
       <button class="icon-btn" id="quickLoadBtn" title="Google Sheet থেকে লোড">⬇️</button>
       <button class="icon-btn" id="settingsBtn" title="Settings">⚙️</button>
@@ -321,7 +326,6 @@ body{
       <button class="tab" data-tab="summary">🏆 পুরো ব্যবসা</button>
     </div>
 
-    <!-- OVERVIEW -->
     <div class="tab-content active" id="tab-overview" data-print-title="📋 সারসংক্ষেপ">
       <div class="card">
         <h2>📋 Quarter-এর সারসংক্ষেপ</h2>
@@ -365,7 +369,6 @@ body{
       </div>
     </div>
 
-    <!-- TASKS -->
     <div class="tab-content" id="tab-tasks" data-print-title="📅 ৯০ দিনের টাস্ক">
       <div class="card">
         <h2>📅 ৯০ দিনের টাস্ক</h2>
@@ -388,7 +391,6 @@ body{
       </div>
     </div>
 
-    <!-- BUDGET -->
     <div class="tab-content" id="tab-budget" data-print-title="💰 বাজেট">
       <div class="card">
         <h2>💰 বাজেট ট্র্যাকার</h2>
@@ -408,7 +410,6 @@ body{
       </div>
     </div>
 
-    <!-- KPI -->
     <div class="tab-content" id="tab-kpi" data-print-title="📊 সাপ্তাহিক KPI">
       <div class="card">
         <h2>📈 সাপ্তাহিক আয়ের চার্ট (এই Quarter)</h2>
@@ -440,7 +441,6 @@ body{
       </div>
     </div>
 
-    <!-- PIPELINE -->
     <div class="tab-content" id="tab-pipeline" data-print-title="🎯 কাস্টমার পাইপলাইন">
       <div class="card">
         <h2>🎯 কাস্টমার পাইপলাইন</h2>
@@ -473,7 +473,6 @@ body{
       </div>
     </div>
 
-    <!-- COMPARE -->
     <div class="tab-content" id="tab-compare" data-print-title="📈 Quarter তুলনা">
       <div class="card">
         <h2>📈 সব Quarter-এর তুলনা</h2>
@@ -502,7 +501,6 @@ body{
       </div>
     </div>
 
-    <!-- NOTES -->
     <div class="tab-content" id="tab-notes" data-print-title="📝 নোট">
       <div class="card">
         <h2>📝 Quarter-এর নোট</h2>
@@ -514,7 +512,6 @@ body{
       </div>
     </div>
 
-    <!-- SUMMARY -->
     <div class="tab-content" id="tab-summary" data-print-title="🏆 পুরো ব্যবসার Summary">
       <div class="card">
         <h2>🏆 পুরো ব্যবসার সারসংক্ষেপ</h2>
@@ -540,12 +537,10 @@ body{
 
 </div>
 
-<!-- Modal 1: New Quarter -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
 </div>
 
-<!-- Modal 2: Settings -->
 <div class="modal-overlay" id="settingsOverlay">
   <div class="modal">
     <h3>⚙️ Settings — Google Sheet Sync</h3>
@@ -556,9 +551,9 @@ body{
         <strong>প্রথমবার সেটআপ:</strong>
         <ol>
           <li>Google Sheet খুলুন → Extensions → Apps Script</li>
-          <li>সেখানে backend কোড পেস্ট করে Deploy করুন</li>
-          <li>Web App URL কপি করুন (যেমন <code>https://script.google.com/macros/s/.../exec</code>)</li>
-          <li>নিচের ঘরে পেস্ট করে <strong>Save</strong> ক্লিক করুন</li>
+          <li>backend কোড পেস্ট করে Deploy করুন</li>
+          <li>Web App URL কপি করুন</li>
+          <li>নিচের ঘরে পেস্ট করে Save ক্লিক করুন</li>
         </ol>
       </p>
       
@@ -586,7 +581,7 @@ body{
       <div style="margin-top:14px">
         <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer">
           <input type="checkbox" id="autoSyncToggle">
-          <span>প্রতি ৫ মিনিটে অটো সেভ (Google Sheet-এ)</span>
+          <span>অটো সেভ (ডেটা বদলালে ২০ সেকেন্ড পর + প্রতি ৩ মিনিটে)</span>
         </label>
       </div>
     </div>
@@ -609,7 +604,7 @@ body{
 "use strict";
 
 /* ============================================================
-   ১. ডেটা: ১৩ সপ্তাহের টাস্ক টেমপ্লেট
+   ১. ডেটা
    ============================================================ */
 const weekTemplates = [
 {title:"আইডিয়া ও সক্ষমতা যাচাই",goal:"নিজের দক্ষতা ও বাজারের সমস্যা বোঝা",tasks:["নিজের দক্ষতা, ডিভাইস, সময় ও আর্থিক সীমা লিখে ফেলো","ডিজিটাল সার্ভিস, নেটওয়ার্কিং ও পণ্য ব্যবসার তুলনা করো","১০ জন সম্ভাব্য কাস্টমারের নাম ও ব্যবসার তালিকা তৈরি করো","কমপক্ষে ৩ জন দোকানদারের সাথে কথা বলো","আরও ৩ জনের সমস্যা, অর্ডার পদ্ধতি ও বাজেট বোঝো","মোট ৬ জনের ফিডব্যাক বিশ্লেষণ করো","প্রাথমিক ব্যবসার আইডিয়া ও কাস্টমার গ্রুপ নির্বাচন করো"]},
@@ -635,7 +630,7 @@ const budgetCategories = [
 /* ============================================================
    ২. স্টেট
    ============================================================ */
-const STORE = "business_quarterly_v3";
+const STORE = "business_quarterly_v4";
 const SYNC_URL_KEY = "business_sync_url";
 const LAST_SYNC_KEY = "business_last_sync";
 const AUTO_SYNC_KEY = "business_auto_sync";
@@ -669,15 +664,18 @@ try{
   }
 }catch(e){ state = defaultState(); }
 
-function save(){
-  try{ localStorage.setItem(STORE, JSON.stringify(state)); }
-  catch(e){ console.warn("Save failed:", e); }
-}
-
-/* Sync config */
 let syncUrl = localStorage.getItem(SYNC_URL_KEY) || "";
 let lastSyncTime = localStorage.getItem(LAST_SYNC_KEY) || "";
-let autoSyncEnabled = localStorage.getItem(AUTO_SYNC_KEY) === "true";
+let autoSyncEnabled;
+{
+  const stored = localStorage.getItem(AUTO_SYNC_KEY);
+  if(stored === null){
+    autoSyncEnabled = true;
+    localStorage.setItem(AUTO_SYNC_KEY, "true");
+  } else {
+    autoSyncEnabled = stored === "true";
+  }
+}
 
 /* ============================================================
    ৩. হেল্পার
@@ -735,50 +733,54 @@ function qTasksDone(q){
 function qCustomers(q){ return (q.pipeline && q.pipeline.sold) || 0; }
 
 /* ============================================================
-   ৫. Google Sheet Sync
+   ৫. save() — Auto Sync ট্রিগার সহ
    ============================================================ */
-function updateSyncStatus(status, timeStr){
-  const statusEl = document.getElementById("syncStatus");
-  const badgeEl = document.getElementById("syncBadge");
-  const quickBtn = document.getElementById("quickSyncBtn");
-  
-  if(!statusEl) return;
-  
-  if(!syncUrl){
-    statusEl.textContent = "⚪ Synced নেই";
-    statusEl.className = "sync-status";
-    if(badgeEl){ badgeEl.textContent = "⚙️ Settings-এ URL দাও"; badgeEl.className = "sync-badge"; }
-    if(quickBtn) quickBtn.className = "icon-btn";
-    return;
-  }
-  
-  if(status === "syncing"){
-    statusEl.textContent = "⏳ Syncing...";
-    statusEl.className = "sync-status";
-    if(quickBtn) quickBtn.className = "icon-btn";
-  } else if(status === "success"){
-    const t = timeStr || new Date().toLocaleTimeString("bn-BD");
-    statusEl.textContent = "✅ Synced";
-    statusEl.className = "sync-status";
-    if(badgeEl){ badgeEl.textContent = "✅ শেষ Sync: " + t; badgeEl.className = "sync-badge active"; }
-    if(quickBtn) quickBtn.className = "icon-btn synced";
-  } else if(status === "error"){
-    statusEl.textContent = "❌ Sync ব্যর্থ";
-    statusEl.className = "sync-status";
-    if(badgeEl){ badgeEl.textContent = "❌ Sync ব্যর্থ"; badgeEl.className = "sync-badge"; }
-    if(quickBtn) quickBtn.className = "icon-btn error";
-  } else {
-    statusEl.textContent = "⚪ Synced নেই";
-    if(badgeEl){ badgeEl.textContent = "⚪ Synced হয়নি"; badgeEl.className = "sync-badge"; }
-  }
+function save(){
+  try{ localStorage.setItem(STORE, JSON.stringify(state)); }
+  catch(e){ console.warn("Save failed:", e); }
+  scheduleAutoSync();
+}
+
+/* ============================================================
+   ৬. Sync System (নির্ভরযোগ্য)
+   ============================================================ */
+let syncInProgress = false;
+let autoSyncTimer = null;      // debounced 20s
+let periodicSyncTimer = null;  // প্রতি ৩ মিনিটে
+
+function scheduleAutoSync(){
+  if(!syncUrl) return;
+  if(!autoSyncEnabled) return;
+  if(autoSyncTimer) clearTimeout(autoSyncTimer);
+  autoSyncTimer = setTimeout(() => {
+    autoSyncTimer = null;
+    console.log("[Auto-sync] Triggered by data change");
+    syncToSheet(false);
+  }, 20000); // ২০ সেকেন্ড
+}
+
+function startPeriodicSync(){
+  if(periodicSyncTimer) clearInterval(periodicSyncTimer);
+  if(!autoSyncEnabled || !syncUrl) return;
+  periodicSyncTimer = setInterval(() => {
+    console.log("[Auto-sync] Periodic (3 min)");
+    syncToSheet(false);
+  }, 3 * 60 * 1000);
 }
 
 async function syncToSheet(showMsg){
   if(!syncUrl){
     if(showMsg !== false) toast("⚠️ আগে Settings-এ Web App URL দাও", "error");
+    updateSyncStatus("idle");
+    return false;
+  }
+  if(syncInProgress){
+    console.log("[Sync] Already in progress, skipping");
+    if(showMsg === true) toast("⏳ Sync ইতিমধ্যে চলছে...");
     return false;
   }
   
+  syncInProgress = true;
   updateSyncStatus("syncing");
   if(showMsg !== false) toast("☁️ Google Sheet-এ সেভ হচ্ছে...");
   
@@ -786,25 +788,43 @@ async function syncToSheet(showMsg){
     const payload = encodeURIComponent(JSON.stringify(state));
     const url = syncUrl + "?action=save&data=" + payload;
     
-    const response = await fetch(url, { method: "GET" });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    
+    const response = await fetch(url, { 
+      method: "GET",
+      signal: controller.signal,
+      redirect: "follow"
+    });
+    clearTimeout(timeoutId);
+    
+    if(!response.ok){
+      throw new Error("HTTP " + response.status);
+    }
+    
     const result = await response.json();
     
     if(result.ok){
-      const t = new Date().toLocaleTimeString("bn-BD");
+      const t = new Date().toLocaleTimeString("bn-BD", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       lastSyncTime = t;
       localStorage.setItem(LAST_SYNC_KEY, t);
       updateSyncStatus("success", t);
+      console.log("[Sync] Success at", t);
       if(showMsg !== false) toast("✅ Google Sheet-এ সেভ হয়েছে!", "success");
+      syncInProgress = false;
       return true;
     } else {
-      updateSyncStatus("error");
-      if(showMsg !== false) toast("❌ ব্যর্থ: " + (result.error || "Unknown"), "error");
-      return false;
+      throw new Error(result.error || "Unknown error");
     }
   }catch(err){
-    console.error(err);
+    console.error("[Sync] Error:", err);
     updateSyncStatus("error");
-    if(showMsg !== false) toast("❌ Network সমস্যা: " + err.message, "error");
+    if(err.name === "AbortError"){
+      if(showMsg !== false) toast("❌ Timeout — সার্ভার সাড়া দিচ্ছে না", "error");
+    } else {
+      if(showMsg !== false) toast("❌ " + err.message, "error");
+    }
+    syncInProgress = false;
     return false;
   }
 }
@@ -814,20 +834,27 @@ async function loadFromSheet(){
     toast("⚠️ আগে Settings-এ Web App URL দাও", "error");
     return;
   }
-  
   if(!confirm("Google Sheet থেকে লোড করলে বর্তমান ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
   
   toast("⬇️ Google Sheet থেকে লোড হচ্ছে...");
   
   try{
-    const url = syncUrl + "?action=load";
-    const response = await fetch(url, { method: "GET" });
+    const url = syncUrl + "?action=load&_t=" + Date.now();
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    
+    const response = await fetch(url, { 
+      method: "GET",
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
     const result = await response.json();
     
     if(result.ok && result.data){
       state = Object.assign(defaultState(), result.data);
       if(!Array.isArray(state.quarters)) state.quarters = [];
-      save();
+      localStorage.setItem(STORE, JSON.stringify(state));
       toast("✅ ডেটা লোড হয়েছে! রিফ্রেশ হচ্ছে...", "success");
       setTimeout(() => location.reload(), 800);
     } else if(result.ok && !result.data){
@@ -836,7 +863,7 @@ async function loadFromSheet(){
       toast("❌ Load ব্যর্থ: " + (result.error || "Unknown"), "error");
     }
   }catch(err){
-    console.error(err);
+    console.error("Load error:", err);
     toast("❌ Network সমস্যা: " + err.message, "error");
   }
 }
@@ -848,12 +875,12 @@ async function testConnection(){
   }
   toast("🔍 Testing...");
   try{
-    const response = await fetch(syncUrl + "?action=ping");
+    const response = await fetch(syncUrl + "?action=ping&_t=" + Date.now());
     const result = await response.json();
     if(result.ok){
-      toast("✅ সংযোগ কাজ করছে! " + (result.message || ""), "success");
+      toast("✅ সংযোগ কাজ করছে!", "success");
     } else {
-      toast("❌ সার্ভার উত্তর দিয়েছে কিন্তু সঠিক না", "error");
+      toast("❌ সার্ভার সমস্যা", "error");
     }
   }catch(err){
     toast("❌ সংযোগ ব্যর্থ: " + err.message, "error");
@@ -865,10 +892,10 @@ async function clearSheet(){
     toast("⚠️ আগে URL সেভ করো", "error");
     return;
   }
-  if(!confirm("⚠️ Google Sheet-এর সব ডেটা মুছে যাবে। এই কাজ ফিরিয়ে আনা যাবে না। চালিয়ে যাব?")) return;
+  if(!confirm("⚠️ Google Sheet-এর সব ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
   
   try{
-    const response = await fetch(syncUrl + "?action=clear");
+    const response = await fetch(syncUrl + "?action=clear&_t=" + Date.now());
     const result = await response.json();
     if(result.ok){
       toast("🗑️ Google Sheet clear হয়েছে", "success");
@@ -881,20 +908,50 @@ async function clearSheet(){
   }
 }
 
-function startAutoSync(){
-  if(window._autoSyncTimer) clearInterval(window._autoSyncTimer);
-  if(!autoSyncEnabled) return;
-  window._autoSyncTimer = setInterval(() => {
-    if(syncUrl){
-      syncToSheet(false).then(ok => {
-        if(ok) console.log("Auto-synced at", new Date().toLocaleTimeString());
-      });
-    }
-  }, 5 * 60 * 1000); // 5 মিনিট
+function updateSyncStatus(status, timeStr){
+  const statusEl = document.getElementById("syncStatus");
+  const badgeEl = document.getElementById("syncBadge");
+  const quickBtn = document.getElementById("quickSyncBtn");
+  
+  if(!statusEl) return;
+  
+  // Quick Sync বাটনের class reset
+  if(quickBtn){
+    quickBtn.className = "icon-btn";
+  }
+  
+  if(!syncUrl){
+    statusEl.textContent = "⚙️ URL দাও";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "⚙️ Settings-এ URL দাও"; badgeEl.className = "sync-badge"; }
+    return;
+  }
+  
+  if(status === "syncing"){
+    statusEl.textContent = "⏳ Syncing...";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "⏳ Syncing..."; badgeEl.className = "sync-badge"; }
+    if(quickBtn) quickBtn.className = "icon-btn syncing";
+  } else if(status === "success"){
+    const t = timeStr || lastSyncTime || "এখন";
+    statusEl.textContent = "✅ Synced";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "✅ শেষ Sync: " + t; badgeEl.className = "sync-badge active"; }
+    if(quickBtn) quickBtn.className = "icon-btn synced";
+  } else if(status === "error"){
+    statusEl.textContent = "❌ Sync ব্যর্থ";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "❌ Sync ব্যর্থ"; badgeEl.className = "sync-badge"; }
+    if(quickBtn) quickBtn.className = "icon-btn error";
+  } else {
+    statusEl.textContent = "⚪ Synced হয়নি";
+    statusEl.className = "sync-status";
+    if(badgeEl){ badgeEl.textContent = "⚪ Synced হয়নি"; badgeEl.className = "sync-badge"; }
+  }
 }
 
 /* ============================================================
-   ৬. Quarter তৈরি
+   ৭. Quarter তৈরি
    ============================================================ */
 function createQuarter(startDate, customName){
   if(!startDate) startDate = today();
@@ -924,7 +981,7 @@ function createQuarter(startDate, customName){
 }
 
 /* ============================================================
-   ৭. Quarter UI
+   ৮. Quarter UI
    ============================================================ */
 function renderQuarterSelect(){
   const sel = document.getElementById("quarterSelect");
@@ -957,7 +1014,7 @@ function renderQuarterStatus(){
 }
 
 /* ============================================================
-   ৮. KPI Chart
+   ৯. KPI Chart
    ============================================================ */
 function renderKPIChart(){
   const barsEl = document.getElementById("kpiChartBars");
@@ -1000,7 +1057,7 @@ function renderKPIChart(){
 }
 
 /* ============================================================
-   ৯. Quarter Comparison Chart
+   ১০. Quarter Comparison Chart
    ============================================================ */
 function renderCompareChart(metric){
   const container = document.getElementById("compareChart");
@@ -1043,7 +1100,7 @@ function renderCompareChart(metric){
 }
 
 /* ============================================================
-   ১০. Dashboard
+   ১১. Dashboard
    ============================================================ */
 function renderDashboard(){
   const q = getActiveQuarter();
@@ -1100,7 +1157,7 @@ function renderDashboard(){
 }
 
 /* ============================================================
-   ১১. Overview
+   ১২. Overview
    ============================================================ */
 function renderOverview(){
   const q = getActiveQuarter();
@@ -1153,7 +1210,7 @@ function bindOverviewInputs(){
 }
 
 /* ============================================================
-   ১২. Tasks
+   ১৩. Tasks
    ============================================================ */
 function renderWeekSelect(){
   const sel = document.getElementById("weekSelect");
@@ -1228,7 +1285,7 @@ function bindWeekNav(){
 }
 
 /* ============================================================
-   ১৩. Budget
+   ১৪. Budget
    ============================================================ */
 function renderBudget(){
   const q = getActiveQuarter();
@@ -1282,7 +1339,7 @@ function renderBudget(){
 }
 
 /* ============================================================
-   ১৪. KPI
+   ১৫. KPI
    ============================================================ */
 function renderKPI(){
   const q = getActiveQuarter();
@@ -1336,7 +1393,7 @@ function updateKPITotals(){
 }
 
 /* ============================================================
-   ১৫. Pipeline
+   ১৬. Pipeline
    ============================================================ */
 function renderPipeline(){
   const q = getActiveQuarter();
@@ -1364,7 +1421,7 @@ function bindPipeline(){
 }
 
 /* ============================================================
-   ১৬. Notes
+   ১৭. Notes
    ============================================================ */
 function renderNotes(){
   const q = getActiveQuarter();
@@ -1401,7 +1458,7 @@ function bindNotes(){
 }
 
 /* ============================================================
-   ১৭. Compare Tab
+   ১৮. Compare Tab
    ============================================================ */
 let currentMetric = "income";
 
@@ -1445,7 +1502,7 @@ function renderCompareTable(){
 }
 
 /* ============================================================
-   ১৮. Summary
+   ১৯. Summary
    ============================================================ */
 function renderSummary(){
   const dash = document.getElementById("summaryDashboard");
@@ -1525,7 +1582,7 @@ function renderSummary(){
 }
 
 /* ============================================================
-   ১৯. Quarter Switch
+   ২০. Quarter Switch
    ============================================================ */
 function switchQuarter(id){
   state.activeQId = id;
@@ -1541,7 +1598,7 @@ function renderAllQuarterData(){
 }
 
 /* ============================================================
-   ২০. Modal — নতুন Quarter
+   ২১. Modal — নতুন Quarter
    ============================================================ */
 function showNewQuarterModal(){
   const overlay = document.getElementById("modalOverlay");
@@ -1604,7 +1661,7 @@ function showNewQuarterModal(){
 }
 
 /* ============================================================
-   ২১. Settings Modal
+   ২২. Settings Modal
    ============================================================ */
 function openSettings(){
   document.getElementById("syncUrlInput").value = syncUrl;
@@ -1638,7 +1695,12 @@ function bindSettings(){
     syncUrl = url;
     localStorage.setItem(SYNC_URL_KEY, syncUrl);
     toast("✅ URL সেভ হয়েছে!", "success");
-    updateSyncStatus("idle");
+    updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
+    if(syncUrl && autoSyncEnabled){
+      startPeriodicSync();
+      // ⭐ URL সেভ করার পরপরই প্রথম Sync
+      setTimeout(() => syncToSheet(true), 500);
+    }
   });
 
   if(testBtn) testBtn.addEventListener("click", testConnection);
@@ -1649,13 +1711,20 @@ function bindSettings(){
   if(autoToggle) autoToggle.addEventListener("change", (e) => {
     autoSyncEnabled = e.target.checked;
     localStorage.setItem(AUTO_SYNC_KEY, autoSyncEnabled);
-    startAutoSync();
-    toast(autoSyncEnabled ? "✅ Auto-sync চালু" : "⏸️ Auto-sync বন্ধ");
+    if(autoSyncEnabled && syncUrl){
+      startPeriodicSync();
+      toast("✅ Auto-sync চালু — এখনই Sync হচ্ছে...", "success");
+      setTimeout(() => syncToSheet(true), 300);
+    } else {
+      if(periodicSyncTimer) clearInterval(periodicSyncTimer);
+      periodicSyncTimer = null;
+      toast(autoSyncEnabled ? "✅ Auto-sync চালু" : "⏸️ Auto-sync বন্ধ");
+    }
   });
 }
 
 /* ============================================================
-   ২২. Tabs
+   ২৩. Tabs
    ============================================================ */
 function initTabs(){
   document.querySelectorAll(".tab").forEach(tab => {
@@ -1673,7 +1742,7 @@ function initTabs(){
 }
 
 /* ============================================================
-   ২৩. Theme
+   ২৪. Theme
    ============================================================ */
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", state.theme);
@@ -1686,12 +1755,13 @@ function initTheme(){
   if(!btn) return;
   btn.addEventListener("click", () => {
     state.theme = state.theme === "dark" ? "light" : "dark";
-    save(); applyTheme();
+    try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){}
+    applyTheme();
   });
 }
 
 /* ============================================================
-   ২৪. Actions
+   ২৫. Actions
    ============================================================ */
 function initActions(){
   const exp = document.getElementById("exportBtn");
@@ -1725,7 +1795,7 @@ function initActions(){
         try{
           const data = JSON.parse(ev.target.result);
           state = Object.assign(defaultState(), data);
-          save();
+          localStorage.setItem(STORE, JSON.stringify(state));
           toast("ডেটা রিস্টোর হয়েছে!", "success");
           setTimeout(() => location.reload(), 600);
         }catch(err){ toast("ভুল ফাইল!", "error"); }
@@ -1745,7 +1815,7 @@ function initActions(){
 }
 
 /* ============================================================
-   ২৫. Sticky Bottom
+   ২৬. Sticky Bottom
    ============================================================ */
 function updateSticky(){
   const q = getActiveQuarter();
@@ -1762,7 +1832,7 @@ function updateSticky(){
 }
 
 /* ============================================================
-   ২৬. Init
+   ২৭. Init
    ============================================================ */
 function init(){
   applyTheme();
@@ -1786,10 +1856,26 @@ function init(){
 
   renderWeekSelect();
 
-  // Sync status প্রাথমিক
-  updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
-  startAutoSync();
+  // Sync status
+  if(syncUrl){
+    updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
+  } else {
+    updateSyncStatus("idle");
+  }
+  
+  // Auto Sync চালু
+  if(autoSyncEnabled && syncUrl){
+    startPeriodicSync();
+    // ⭐ HTML খোলার ৩ সেকেন্ড পরে প্রথম Sync
+    if(state.quarters.length > 0){
+      setTimeout(() => {
+        console.log("[Auto-sync] On page load");
+        syncToSheet(false);
+      }, 3000);
+    }
+  }
 
+  // Quarter থাকলে UI দেখাও
   if(state.quarters.length === 0){
     document.getElementById("emptyState").style.display = "block";
     document.getElementById("mainApp").style.display = "none";
@@ -1799,7 +1885,7 @@ function init(){
 
   if(!state.activeQId || !getActiveQuarter()){
     state.activeQId = state.quarters[state.quarters.length - 1].id;
-    save();
+    try{ localStorage.setItem(STORE, JSON.stringify(state)); }catch(e){}
   }
 
   document.getElementById("emptyState").style.display = "none";
@@ -1809,6 +1895,16 @@ function init(){
   renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
 
   setInterval(() => { renderQuarterStatus(); updateSticky(); }, 60000);
+  
+  // Page close হওয়ার আগে auto-save চেষ্টা
+  window.addEventListener("beforeunload", () => {
+    if(syncUrl && autoSyncEnabled){
+      try{
+        const payload = encodeURIComponent(JSON.stringify(state));
+        navigator.sendBeacon(syncUrl + "?action=save&data=" + payload);
+      }catch(e){}
+    }
+  });
 }
 
 if(document.readyState === "loading"){
