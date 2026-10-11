@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ব্যবসা মনিটরিং — Google Sheet Sync</title>
+<title>ব্যবসা মনিটরিং — Full Dashboard</title>
 <style>
 :root{
   --bg:#f1f5f9;--card:#fff;--ink:#0f172a;--muted:#64748b;--line:#e2e8f0;
   --brand:#0f766e;--brand2:#14b8a6;--accent:#f59e0b;--danger:#ef4444;
-  --blue:#3b82f6;--purple:#8b5cf6;--pink:#ec4899;
-  --soft:#f0fdfa;--success:#10b981;
+  --blue:#3b82f6;--purple:#8b5cf6;--pink:#ec4899;--success:#10b981;
+  --soft:#f0fdfa;
   --shadow:0 4px 16px rgba(15,23,42,.07);
 }
 [data-theme="dark"]{
@@ -17,11 +17,7 @@
   --soft:#134e4a;--shadow:0 4px 16px rgba(0,0,0,.5);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{
-  background:var(--bg);color:var(--ink);
-  font-family:system-ui,-apple-system,"Hind Siliguri","Noto Sans Bengali",sans-serif;
-  line-height:1.6;padding-bottom:80px;transition:background .3s,color .3s;
-}
+body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Hind Siliguri","Noto Sans Bengali",sans-serif;line-height:1.6;padding-bottom:80px;transition:background .3s,color .3s}
 .wrap{max-width:1250px;margin:0 auto;padding:0 16px}
 
 /* Top bar */
@@ -35,42 +31,17 @@ body{
 .icon-btn.synced{background:rgba(16,185,129,.4);border-color:rgba(16,185,129,.6)}
 .icon-btn.error{background:rgba(239,68,68,.4);border-color:rgba(239,68,68,.6)}
 .icon-btn.syncing{animation:pulse 1s infinite}
-@keyframes pulse{
-  0%,100%{opacity:1}
-  50%{opacity:.5}
-}
-.sync-status{
-  font-size:.72rem;color:#fff;background:rgba(255,255,255,.15);
-  padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);
-  display:flex;align-items:center;gap:5px;
-}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.sync-status{font-size:.72rem;color:#fff;background:rgba(255,255,255,.15);padding:4px 10px;border-radius:99px;border:1px solid rgba(255,255,255,.25);display:flex;align-items:center;gap:5px}
 
 /* Quarter bar */
-.quarter-bar{
-  background:var(--card);border:1px solid var(--line);border-radius:12px;
-  padding:12px 16px;margin:18px 0;box-shadow:var(--shadow);
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:10px;
-}
+.quarter-bar{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin:18px 0;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .quarter-bar-left{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .quarter-bar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.q-select{
-  padding:9px 14px;border-radius:10px;border:1px solid var(--line);
-  background:var(--bg);color:var(--ink);font:inherit;font-weight:600;
-  cursor:pointer;min-width:220px;
-}
-.btn-new-q{
-  padding:9px 16px;border-radius:10px;border:none;
-  background:linear-gradient(135deg,var(--brand),var(--brand2));
-  color:#fff;cursor:pointer;font:inherit;font-weight:700;
-  transition:.2s;display:flex;align-items:center;gap:6px;
-}
+.q-select{padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-weight:600;cursor:pointer;min-width:220px}
+.btn-new-q{padding:9px 16px;border-radius:10px;border:none;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;cursor:pointer;font:inherit;font-weight:700;transition:.2s;display:flex;align-items:center;gap:6px}
 .btn-new-q:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,118,110,.3)}
-.q-status{
-  font-size:.82rem;color:var(--muted);
-  padding:6px 12px;background:var(--bg);border-radius:99px;
-  border:1px solid var(--line);
-}
+.q-status{font-size:.82rem;color:var(--muted);padding:6px 12px;background:var(--bg);border-radius:99px;border:1px solid var(--line)}
 
 /* Dashboard */
 .dashboard{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:18px}
@@ -87,8 +58,8 @@ body{
 .dash-sub{font-size:.7rem;color:var(--brand);margin-top:3px;font-weight:600}
 
 /* Tabs */
-.tabs{display:flex;gap:6px;background:var(--card);padding:6px;border-radius:12px;border:1px solid var(--line);margin-bottom:18px;overflow-x:auto}
-.tab{padding:9px 14px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;white-space:nowrap;transition:.2s;border:none;background:transparent;color:var(--muted);font-family:inherit}
+.tabs{display:flex;gap:6px;background:var(--card);padding:6px;border-radius:12px;border:1px solid var(--line);margin-bottom:18px;overflow-x:auto;scrollbar-width:thin}
+.tab{padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.82rem;white-space:nowrap;transition:.2s;border:none;background:transparent;color:var(--muted);font-family:inherit}
 .tab.active{background:var(--brand);color:#fff}
 .tab:hover:not(.active){background:var(--line)}
 .tab-content{display:none}
@@ -103,10 +74,7 @@ body{
 .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:12px}
 .info-field{display:flex;flex-direction:column;gap:4px}
 .info-field label{font-size:.78rem;color:var(--muted);font-weight:600}
-.info-field input,.info-field textarea,.info-field select{
-  padding:8px 10px;border:1px solid var(--line);border-radius:8px;
-  background:var(--bg);color:var(--ink);font:inherit;font-size:.88rem;
-}
+.info-field input,.info-field textarea,.info-field select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.88rem}
 .info-field input:focus,.info-field textarea:focus{outline:2px solid var(--brand);outline-offset:1px}
 
 /* Week nav */
@@ -139,9 +107,15 @@ body{
 .data-table{width:100%;border-collapse:collapse;font-size:.86rem}
 .data-table th,.data-table td{padding:9px 6px;text-align:left;border-bottom:1px solid var(--line)}
 .data-table th{color:var(--muted);font-weight:600;font-size:.76rem;text-transform:uppercase}
-.data-table input{width:100%;padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit}
+.data-table input,.data-table select{padding:7px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem}
 .data-table input:focus{outline:2px solid var(--brand);outline-offset:1px}
 .data-table tfoot th{background:var(--bg);font-weight:700;color:var(--ink)}
+
+/* Buttons */
+.btn-add{padding:9px 16px;border-radius:9px;border:none;background:var(--brand);color:#fff;cursor:pointer;font-family:inherit;font-weight:600;font-size:.85rem;transition:.2s;margin-bottom:12px}
+.btn-add:hover{background:var(--brand2)}
+.btn-del{padding:4px 8px;border-radius:6px;border:none;background:#fee2e2;color:#991b1b;cursor:pointer;font-family:inherit;font-size:.75rem;font-weight:700}
+.btn-del:hover{background:#fecaca}
 
 /* Chart */
 .chart-wrap{margin-top:12px;width:100%}
@@ -152,14 +126,11 @@ body{
 .chart-bar-wrap:hover{transform:translateY(-2px)}
 .chart-bar-value{font-size:.7rem;font-weight:700;color:var(--ink);margin-bottom:4px;white-space:nowrap;opacity:0;transition:opacity .2s;position:absolute;bottom:100%;padding-bottom:2px}
 .chart-bar-wrap:hover .chart-bar-value,.chart-bar-wrap.has-value .chart-bar-value{opacity:1}
-.chart-bar{width:70%;max-width:42px;min-height:3px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s ease,background .3s;box-shadow:0 2px 6px rgba(15,118,110,.2);position:relative}
+.chart-bar{width:70%;max-width:42px;min-height:3px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s ease;box-shadow:0 2px 6px rgba(15,118,110,.2);position:relative}
 .chart-bar.empty{background:var(--line);min-height:3px;border-radius:2px;box-shadow:none}
-.chart-bar-wrap:hover .chart-bar:not(.empty){background:linear-gradient(180deg,var(--brand),var(--brand2));box-shadow:0 4px 12px rgba(15,118,110,.4)}
 .chart-bar-label{font-size:.7rem;color:var(--muted);margin-top:6px;font-weight:600;white-space:nowrap}
 .chart-bar-dot{width:6px;height:6px;border-radius:50%;background:var(--brand);margin-top:2px;opacity:0;transition:opacity .2s}
 .chart-bar-wrap.has-value .chart-bar-dot{opacity:1}
-[data-theme="dark"] .chart-bar{box-shadow:0 2px 6px rgba(20,184,166,.25)}
-[data-theme="dark"] .chart-bar.empty{background:#334155}
 
 /* Compare chart */
 .compare-chart{display:flex;align-items:flex-end;justify-content:space-around;gap:6px;height:260px;padding:10px 6px 0;border-left:1px solid var(--line);border-bottom:1px solid var(--line);margin-top:10px;overflow-x:auto}
@@ -167,9 +138,9 @@ body{
 .cc-bar:hover{transform:translateY(-2px)}
 .cc-value{font-size:.72rem;font-weight:700;color:var(--ink);margin-bottom:3px;opacity:0;transition:opacity .2s;position:absolute;bottom:100%;padding-bottom:2px;white-space:nowrap}
 .cc-bar:hover .cc-value,.cc-bar .cc-value.show{opacity:1}
-.cc-bar-fill{width:70%;max-width:48px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s,background .3s;box-shadow:0 2px 6px rgba(15,118,110,.2);min-height:2px}
+.cc-bar-fill{width:70%;max-width:48px;background:linear-gradient(180deg,var(--accent),var(--brand));border-radius:6px 6px 0 0;transition:height .35s;box-shadow:0 2px 6px rgba(15,118,110,.2);min-height:2px}
 .cc-bar.empty .cc-bar-fill{background:var(--line);min-height:2px;box-shadow:none}
-.cc-bar.active .cc-bar-fill{background:linear-gradient(180deg,var(--brand),var(--brand2));box-shadow:0 4px 14px rgba(15,118,110,.4)}
+.cc-bar.active .cc-bar-fill{background:linear-gradient(180deg,var(--brand),var(--brand2))}
 .cc-label{font-size:.7rem;color:var(--muted);margin-top:6px;font-weight:600;white-space:nowrap}
 .cc-bar.active .cc-label{color:var(--brand);font-weight:700}
 
@@ -183,9 +154,6 @@ body{
 .growth-badge.up{background:#d1fae5;color:#065f46}
 .growth-badge.down{background:#fee2e2;color:#991b1b}
 .growth-badge.neutral{background:#e2e8f0;color:#475569}
-[data-theme="dark"] .growth-badge.up{background:#064e3b;color:#6ee7b7}
-[data-theme="dark"] .growth-badge.down{background:#7f1d1d;color:#fca5a5}
-[data-theme="dark"] .growth-badge.neutral{background:#334155;color:#cbd5e1}
 
 /* Pipeline */
 .pipeline{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
@@ -198,6 +166,29 @@ body{
 /* Notes */
 .notes-area{width:100%;min-height:120px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit;resize:vertical;line-height:1.6}
 .notes-area:focus{outline:2px solid var(--brand);outline-offset:1px}
+
+/* KPI Mini Cards */
+.kpi-mini{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.kpi-mini-card{background:var(--bg);border-radius:10px;padding:12px;text-align:center;border:1px solid var(--line)}
+.kpi-mini-value{font-size:1.3rem;font-weight:800;color:var(--brand)}
+.kpi-mini-label{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* Habit Grid */
+.habit-grid{display:grid;gap:8px;margin-top:10px}
+.habit-row{display:grid;grid-template-columns:1.5fr repeat(7, 1fr);gap:4px;align-items:center;background:var(--bg);padding:8px;border-radius:8px}
+.habit-name{font-size:.85rem;font-weight:600}
+.habit-day{text-align:center;font-size:.75rem;cursor:pointer;padding:6px 2px;border-radius:6px;background:var(--card);border:1px solid var(--line);user-select:none;transition:.2s}
+.habit-day.done{background:#10b981;color:#fff;border-color:#10b981}
+.habit-day:hover{border-color:var(--brand)}
+
+/* Goal card */
+.goal-card{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--card);margin-bottom:8px}
+.goal-status{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;border:2px solid var(--line);transition:.2s}
+.goal-status.done{background:#10b981;color:#fff;border-color:#10b981}
+.goal-title{font-size:.9rem;font-weight:600}
+.goal-meta{font-size:.75rem;color:var(--muted);margin-top:2px}
+.goal-deadline{font-size:.75rem;padding:3px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--line)}
+.goal-deadline.overdue{background:#fee2e2;color:#991b1b;border-color:#fecaca}
 
 /* Toast */
 .toast{position:fixed;bottom:90px;right:20px;background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:10px;font-size:.88rem;z-index:999;opacity:0;transform:translateY(20px);transition:.3s;pointer-events:none;max-width:320px}
@@ -220,9 +211,7 @@ body{
 .modal-buttons{display:flex;gap:10px;margin-top:16px}
 .modal-buttons button{flex:1;padding:11px;border-radius:10px;border:none;cursor:pointer;font:inherit;font-weight:700;font-family:inherit;transition:.2s}
 .btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(15,118,110,.3)}
 .btn-secondary{background:var(--bg);color:var(--ink);border:1px solid var(--line)!important}
-.btn-danger{background:#ef4444;color:#fff}
 
 /* Empty state */
 .empty-state{text-align:center;padding:60px 20px;color:var(--muted)}
@@ -230,41 +219,37 @@ body{
 .empty-state p{margin-bottom:20px;font-size:.92rem}
 .empty-state .btn-new-q{padding:12px 24px;font-size:.95rem;display:inline-flex}
 
-/* Sync section in modal */
+/* Sync section */
 .sync-section{border-top:1px solid var(--line);margin-top:16px;padding-top:16px}
-.sync-section h4{font-size:.9rem;margin-bottom:8px;color:var(--ink)}
-.sync-help{font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
-.sync-help ol{margin:6px 0 0 18px}
-.sync-help code{background:var(--bg);padding:2px 6px;border-radius:4px;font-size:.85em;color:var(--brand)}
 .sync-url-input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit;font-size:.78rem;font-family:monospace}
 .sync-buttons{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .sync-buttons button{flex:1;padding:9px;border-radius:8px;border:none;cursor:pointer;font:inherit;font-weight:600;font-family:inherit;font-size:.85rem;transition:.2s;min-width:100px}
 .btn-sync-save{background:var(--brand);color:#fff}
-.btn-sync-save:hover{background:var(--brand2)}
 .btn-sync-test{background:var(--bg);color:var(--ink);border:1px solid var(--line)!important}
 .btn-sync-send{background:var(--blue);color:#fff}
 .btn-sync-load{background:var(--purple);color:#fff}
 .btn-sync-clear{background:#fef2f2;color:#991b1b}
-
 .sync-badge{display:inline-flex;align-items:center;gap:4px;font-size:.75rem;color:var(--muted);padding:4px 10px;background:var(--bg);border-radius:99px;border:1px solid var(--line)}
 .sync-badge.active{color:var(--success);border-color:var(--success)}
 
+/* Responsive */
 @media(max-width:768px){
   .dashboard{grid-template-columns:repeat(2,1fr)}
   .pipeline{grid-template-columns:repeat(2,1fr)}
   .day-grid{grid-template-columns:1fr}
   .top-bar .wrap{flex-direction:column;align-items:flex-start}
   .quarter-bar{flex-direction:column;align-items:stretch}
+  .habit-row{grid-template-columns:1.5fr repeat(7, 1fr);gap:2px;font-size:.7rem}
+  .habit-day{padding:4px 1px;font-size:.65rem}
+  .goal-card{grid-template-columns:auto 1fr;gap:8px}
 }
 @media(max-width:600px){
   .chart-y-axis{min-width:40px;font-size:.65rem}
   .chart-bar-value{font-size:.62rem}
-  .chart-bar-label{font-size:.6rem;transform:rotate(-45deg);transform-origin:center;margin-top:10px}
-  .chart-bar-wrap{min-width:24px;flex:1 0 24px}
   .chart-container{height:240px}
 }
 @media print{
-  .top-bar,.sticky-bottom,.tabs,.top-actions,.week-nav button,.pipe-btn,.icon-btn,.quarter-bar-right,.metric-switch{display:none!important}
+  .top-bar,.sticky-bottom,.tabs,.top-actions,.week-nav button,.pipe-btn,.icon-btn,.quarter-bar-right,.metric-switch,.btn-add,.btn-del{display:none!important}
   .tab-content{display:block!important;page-break-inside:avoid;margin-bottom:20px}
   .tab-content::before{content:attr(data-print-title);display:block;font-size:1.2rem;font-weight:700;margin:16px 0 8px;color:#000}
   body{background:#fff;padding:0}
@@ -274,9 +259,10 @@ body{
 </head>
 <body>
 
+<!-- TOP BAR -->
 <div class="top-bar">
   <div class="wrap">
-    <div class="logo">💼 ব্যবসা মনিটরিং <span style="font-size:.65rem;opacity:.7;font-weight:400">Cloud Sync</span></div>
+    <div class="logo">💼 ব্যবসা মনিটরিং <span style="font-size:.65rem;opacity:.7;font-weight:400">Full v5.0</span></div>
     <div class="top-actions">
       <span class="sync-status" id="syncStatus">⚪ Synced হয়নি</span>
       <button class="icon-btn" id="quickSyncBtn" title="Google Sheet-এ সেভ">☁️</button>
@@ -302,6 +288,7 @@ body{
 
   <div id="mainApp" style="display:none">
 
+    <!-- Quarter Bar -->
     <div class="quarter-bar">
       <div class="quarter-bar-left">
         <select class="q-select" id="quarterSelect"></select>
@@ -313,20 +300,214 @@ body{
       </div>
     </div>
 
-    <div class="dashboard" id="dashboard"></div>
+    <!-- Today Overview -->
+    <div class="dashboard" id="todayDashboard"></div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="overview">📋 সারসংক্ষেপ</button>
-      <button class="tab" data-tab="tasks">📅 ৯০ দিনের টাস্ক</button>
+    <!-- Tabs -->
+    <div class="tabs" id="mainTabs">
+      <button class="tab active" data-tab="today">📅 আজ</button>
+      <button class="tab" data-tab="week">📆 এই সপ্তাহ</button>
+      <button class="tab" data-tab="customers">👥 কাস্টমার</button>
+      <button class="tab" data-tab="expenses">💸 খরচ</button>
+      <button class="tab" data-tab="time">⏱️ সময়</button>
+      <button class="tab" data-tab="overview">📋 সারসংক্ষেপ</button>
+      <button class="tab" data-tab="tasks">📝 ৯০ দিনের টাস্ক</button>
       <button class="tab" data-tab="budget">💰 বাজেট</button>
       <button class="tab" data-tab="kpi">📊 KPI</button>
       <button class="tab" data-tab="pipeline">🎯 পাইপলাইন</button>
+      <button class="tab" data-tab="finance">💹 আর্থিক</button>
+      <button class="tab" data-tab="goals">🎯 লক্ষ্য</button>
+      <button class="tab" data-tab="habits">🔥 অভ্যাস</button>
       <button class="tab" data-tab="compare">📈 Quarter তুলনা</button>
-      <button class="tab" data-tab="notes">📝 নোট</button>
       <button class="tab" data-tab="summary">🏆 পুরো ব্যবসা</button>
     </div>
 
-    <div class="tab-content active" id="tab-overview" data-print-title="📋 সারসংক্ষেপ">
+    <!-- TAB: TODAY (Daily Tracker) -->
+    <div class="tab-content active" id="tab-today" data-print-title="📅 আজকের ট্র্যাকার">
+      <div class="card">
+        <h2>📅 আজকের এন্ট্রি — <span id="todayDate"></span></h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
+          প্রতিদিন ২ মিনিটে আজকের ৫টি সংখ্যা লিখুন। সপ্তাহ শেষে চার্টে দেখতে পাবেন।
+        </p>
+        <div class="info-grid">
+          <div class="info-field">
+            <label>🎯 আউটরিচ (নতুন যোগাযোগ)</label>
+            <input type="number" id="dOutreach" min="0" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>⏱️ কাজের ঘণ্টা</label>
+            <input type="number" id="dHours" min="0" step="0.5" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>💰 আজকের আয় (৳)</label>
+            <input type="number" id="dIncome" min="0" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>💸 আজকের খরচ (৳)</label>
+            <input type="number" id="dExpense" min="0" placeholder="০">
+          </div>
+          <div class="info-field">
+            <label>⚡ Energy (১-৫)</label>
+            <select id="dEnergy">
+              <option value="">—</option>
+              <option value="1">⭐ ১</option>
+              <option value="2">⭐⭐ ২</option>
+              <option value="3">⭐⭐⭐ ৩</option>
+              <option value="4">⭐⭐⭐⭐ ৪</option>
+              <option value="5">⭐⭐⭐⭐⭐ ৫</option>
+            </select>
+          </div>
+          <div class="info-field">
+            <label>😊 Mood (১-৫)</label>
+            <select id="dMood">
+              <option value="">—</option>
+              <option value="1">😞 ১</option>
+              <option value="2">😐 ২</option>
+              <option value="3">🙂 ৩</option>
+              <option value="4">😊 ৪</option>
+              <option value="5">😄 ৫</option>
+            </select>
+          </div>
+        </div>
+        <div class="info-field">
+          <label>📝 আজকের নোট (কী করলাম, কী শিখলাম)</label>
+          <textarea class="notes-area" id="dNotes" placeholder="আজকের কাজ, শেখা, সমস্যা..." style="min-height:80px"></textarea>
+        </div>
+        <button class="btn-add" id="saveDailyBtn" style="margin-top:12px;width:100%">💾 আজকের এন্ট্রি সেভ করো</button>
+      </div>
+
+      <div class="card">
+        <h2>📊 শেষ ৭ দিনের ট্র্যাক</h2>
+        <div class="chart-wrap">
+          <div class="chart-container" style="height:240px">
+            <div class="chart-y-axis" id="dailyChartYAxis"></div>
+            <div class="chart-bars" id="dailyChartBars"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📋 সাম্প্রতিক এন্ট্রি</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>তারিখ</th><th>আউটরিচ</th><th>ঘণ্টা</th><th>আয় (৳)</th><th>খরচ (৳)</th><th>Energy</th><th>নোট</th></tr>
+            </thead>
+            <tbody id="recentDailyBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: WEEK (Weekly Review) -->
+    <div class="tab-content" id="tab-week" data-print-title="📆 এই সপ্তাহের Review">
+      <div class="card">
+        <h2>📆 এই সপ্তাহের সারসংক্ষেপ</h2>
+        <div class="kpi-mini" id="weekKpiMini"></div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 এই সপ্তাহের Review প্রশ্ন</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
+          সপ্তাহ শেষে ৫ মিনিটে উত্তর দিন। এই উত্তরই আপনাকে পরের সপ্তাহে উন্নতি করতে সাহায্য করবে।
+        </p>
+        <div style="display:grid;gap:12px">
+          <div class="info-field">
+            <label>১. এই সপ্তাহের সবচেয়ে বড় সাফল্য কী?</label>
+            <textarea class="notes-area" id="wrSuccess" style="min-height:60px"></textarea>
+          </div>
+          <div class="info-field">
+            <label>২. কোন কাজ সবচেয়ে ভালো ফল দিয়েছে?</label>
+            <textarea class="notes-area" id="wrBest" style="min-height:60px"></textarea>
+          </div>
+          <div class="info-field">
+            <label>৩. কোন কাজ সময় নষ্ট করেছে?</label>
+            <textarea class="notes-area" id="wrWorst" style="min-height:60px"></textarea>
+          </div>
+          <div class="info-field">
+            <label>৪. এই সপ্তাহে কী শিখলাম?</label>
+            <textarea class="notes-area" id="wrLearned" style="min-height:60px"></textarea>
+          </div>
+          <div class="info-field">
+            <label>৫. পরের সপ্তাহে কী বদলাবো?</label>
+            <textarea class="notes-area" id="wrChange" style="min-height:60px"></textarea>
+          </div>
+          <div class="info-field">
+            <label>৬. Energy Level (১-১০)</label>
+            <input type="number" id="wrEnergy" min="1" max="10" placeholder="৭">
+          </div>
+        </div>
+        <button class="btn-add" id="saveWeeklyBtn" style="margin-top:12px;width:100%">💾 সাপ্তাহিক Review সেভ করো</button>
+      </div>
+
+      <div class="card">
+        <h2>📊 আগের সপ্তাহগুলোর তুলনা</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>সপ্তাহ</th><th>আউটরিচ</th><th>ঘণ্টা</th><th>আয় (৳)</th><th>খরচ (৳)</th><th>Energy</th></tr>
+            </thead>
+            <tbody id="weeklyCompareBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CUSTOMERS (CRM) -->
+    <div class="tab-content" id="tab-customers" data-print-title="👥 কাস্টমার">
+      <div class="card">
+        <h2>👥 কাস্টমার লিস্ট</h2>
+        <div class="kpi-mini" id="customerKpiMini"></div>
+        <button class="btn-add" id="addCustomerBtn">➕ নতুন কাস্টমার যোগ করো</button>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>নাম</th><th>ফোন</th><th>সোর্স</th><th>সার্ভিস</th><th>মূল্য (৳)</th><th>স্টেটাস</th><th>Follow-up</th><th>নোট</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="customerBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: EXPENSES -->
+    <div class="tab-content" id="tab-expenses" data-print-title="💸 খরচ">
+      <div class="card">
+        <h2>💸 খরচের লগ</h2>
+        <div class="kpi-mini" id="expenseKpiMini"></div>
+        <button class="btn-add" id="addExpenseBtn">➕ নতুন খরচ যোগ করো</button>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>তারিখ</th><th>খাত</th><th>পরিমাণ (৳)</th><th>কারণ</th><th>ফল</th><th></th></tr>
+            </thead>
+            <tbody id="expenseBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: TIME -->
+    <div class="tab-content" id="tab-time" data-print-title="⏱️ সময়">
+      <div class="card">
+        <h2>⏱️ সময়ের হিসাব</h2>
+        <div class="kpi-mini" id="timeKpiMini"></div>
+        <button class="btn-add" id="addTimeBtn">➕ নতুন কাজ যোগ করো</button>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>তারিখ</th><th>কাজ</th><th>মিনিট</th><th>ফল</th><th></th></tr>
+            </thead>
+            <tbody id="timeBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: OVERVIEW -->
+    <div class="tab-content" id="tab-overview" data-print-title="📋 সারসংক্ষেপ">
       <div class="card">
         <h2>📋 Quarter-এর সারসংক্ষেপ</h2>
         <div class="progress-section">
@@ -348,7 +529,7 @@ body{
         <h2>🎯 Quarter-এর লক্ষ্য</h2>
         <div class="info-grid">
           <div class="info-field">
-            <label>সাধারণ Target (যেকোনো লেখা)</label>
+            <label>সাধারণ Target</label>
             <input type="text" id="qTargetText" placeholder="যেমন: ৩ জন নতুন কাস্টমার পাবো">
           </div>
           <div class="info-field">
@@ -356,7 +537,7 @@ body{
             <input type="number" id="qTargetIncome" placeholder="০">
           </div>
           <div class="info-field">
-            <label>কাস্টমার Target (সংখ্যা)</label>
+            <label>কাস্টমার Target</label>
             <input type="number" id="qTargetCustomers" placeholder="০">
           </div>
           <div class="info-field">
@@ -364,14 +545,15 @@ body{
             <input type="number" id="qTargetProfit" placeholder="০">
           </div>
         </div>
-        <h3>📝 Quarter-এর মূল কৌশল</h3>
+        <h3>📝 মূল কৌশল</h3>
         <textarea class="notes-area" id="qStrategy" placeholder="এই Quarter-এ তুমি কী কৌশল অবলম্বন করবে?"></textarea>
       </div>
     </div>
 
-    <div class="tab-content" id="tab-tasks" data-print-title="📅 ৯০ দিনের টাস্ক">
+    <!-- TAB: TASKS -->
+    <div class="tab-content" id="tab-tasks" data-print-title="📝 ৯০ দিনের টাস্ক">
       <div class="card">
-        <h2>📅 ৯০ দিনের টাস্ক</h2>
+        <h2>📝 ৯০ দিনের টাস্ক</h2>
         <div class="week-nav">
           <button id="prevWeek">◀ আগের</button>
           <select id="weekSelect"></select>
@@ -391,9 +573,10 @@ body{
       </div>
     </div>
 
+    <!-- TAB: BUDGET -->
     <div class="tab-content" id="tab-budget" data-print-title="💰 বাজেট">
       <div class="card">
-        <h2>💰 বাজেট ট্র্যাকার</h2>
+        <h2>💰 Quarter বাজেট</h2>
         <table class="data-table">
           <thead>
             <tr><th>খাত</th><th>পরিকল্পিত</th><th>প্রকৃত খরচ</th><th>অবস্থা</th></tr>
@@ -410,9 +593,10 @@ body{
       </div>
     </div>
 
-    <div class="tab-content" id="tab-kpi" data-print-title="📊 সাপ্তাহিক KPI">
+    <!-- TAB: KPI -->
+    <div class="tab-content" id="tab-kpi" data-print-title="📊 KPI">
       <div class="card">
-        <h2>📈 সাপ্তাহিক আয়ের চার্ট (এই Quarter)</h2>
+        <h2>📈 সাপ্তাহিক আয়ের চার্ট</h2>
         <div class="chart-wrap">
           <div class="chart-container">
             <div class="chart-y-axis" id="kpiChartYAxis"></div>
@@ -422,7 +606,7 @@ body{
       </div>
 
       <div class="card">
-        <h2>📊 সাপ্তাহিক KPI ট্র্যাকার</h2>
+        <h2>📊 সাপ্তাহিক KPI টেবিল</h2>
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
@@ -441,7 +625,8 @@ body{
       </div>
     </div>
 
-    <div class="tab-content" id="tab-pipeline" data-print-title="🎯 কাস্টমার পাইপলাইন">
+    <!-- TAB: PIPELINE -->
+    <div class="tab-content" id="tab-pipeline" data-print-title="🎯 পাইপলাইন">
       <div class="card">
         <h2>🎯 কাস্টমার পাইপলাইন</h2>
         <div class="pipeline">
@@ -473,6 +658,49 @@ body{
       </div>
     </div>
 
+    <!-- TAB: FINANCE -->
+    <div class="tab-content" id="tab-finance" data-print-title="💹 আর্থিক বিশ্লেষণ">
+      <div class="card">
+        <h2>💹 Quarter-এর আর্থিক বিশ্লেষণ</h2>
+        <div class="kpi-mini" id="financeKpiMini"></div>
+      </div>
+      <div class="card">
+        <h2>📊 আর্থিক সূচক</h2>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead>
+              <tr><th>Metric</th><th>মান</th><th>ব্যাখ্যা</th></tr>
+            </thead>
+            <tbody id="financeBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: GOALS -->
+    <div class="tab-content" id="tab-goals" data-print-title="🎯 লক্ষ্য">
+      <div class="card">
+        <h2>🎯 লক্ষ্য ট্র্যাকার</h2>
+        <div class="kpi-mini" id="goalKpiMini"></div>
+        <button class="btn-add" id="addGoalBtn">➕ নতুন লক্ষ্য যোগ করো</button>
+        <div id="goalList"></div>
+      </div>
+    </div>
+
+    <!-- TAB: HABITS -->
+    <div class="tab-content" id="tab-habits" data-print-title="🔥 অভ্যাস">
+      <div class="card">
+        <h2>🔥 দৈনিক অভ্যাস ট্র্যাকার</h2>
+        <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
+          প্রতিদিন অভ্যাস করলে সেই দিন সবুজ হয়ে যাবে।
+        </p>
+        <div class="kpi-mini" id="habitKpiMini"></div>
+        <div id="habitGrid" class="habit-grid"></div>
+        <button class="btn-add" id="addHabitBtn" style="margin-top:14px">➕ নতুন অভ্যাস যোগ করো</button>
+      </div>
+    </div>
+
+    <!-- TAB: COMPARE -->
     <div class="tab-content" id="tab-compare" data-print-title="📈 Quarter তুলনা">
       <div class="card">
         <h2>📈 সব Quarter-এর তুলনা</h2>
@@ -487,7 +715,7 @@ body{
       </div>
 
       <div class="card">
-        <h2>📊 Quarter-ভিত্তিক ডেটা টেবিল</h2>
+        <h2>📊 Quarter-ভিত্তিক টেবিল</h2>
         <div style="overflow-x:auto">
           <table class="data-table">
             <thead>
@@ -501,18 +729,8 @@ body{
       </div>
     </div>
 
-    <div class="tab-content" id="tab-notes" data-print-title="📝 নোট">
-      <div class="card">
-        <h2>📝 Quarter-এর নোট</h2>
-        <textarea class="notes-area" id="notesArea" placeholder="Quarter-এর নোট লিখতে শুরু করো..."></textarea>
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="pipe-btn" id="saveNotes" style="flex:1;padding:10px">💾 সেভ করো</button>
-          <button class="pipe-btn" id="clearNotes" style="flex:1;padding:10px">🗑️ মুছে ফেলো</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="tab-content" id="tab-summary" data-print-title="🏆 পুরো ব্যবসার Summary">
+    <!-- TAB: SUMMARY -->
+    <div class="tab-content" id="tab-summary" data-print-title="🏆 পুরো ব্যবসা">
       <div class="card">
         <h2>🏆 পুরো ব্যবসার সারসংক্ষেপ</h2>
         <div class="dashboard" id="summaryDashboard"></div>
@@ -537,6 +755,7 @@ body{
 
 </div>
 
+<!-- Modals -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modalContent"></div>
 </div>
@@ -544,40 +763,29 @@ body{
 <div class="modal-overlay" id="settingsOverlay">
   <div class="modal">
     <h3>⚙️ Settings — Google Sheet Sync</h3>
-    
     <div class="sync-section">
       <h4>☁️ Google Sheet সংযোগ</h4>
-      <p class="sync-help">
-        <strong>প্রথমবার সেটআপ:</strong>
-        <ol>
-          <li>Google Sheet খুলুন → Extensions → Apps Script</li>
-          <li>backend কোড পেস্ট করে Deploy করুন</li>
-          <li>Web App URL কপি করুন</li>
-          <li>নিচের ঘরে পেস্ট করে Save ক্লিক করুন</li>
-        </ol>
+      <p style="font-size:.78rem;color:var(--muted);line-height:1.5;margin-bottom:10px">
+        Apps Script → Deploy → Web app → URL কপি করে নিচে পেস্ট করুন
       </p>
-      
       <div class="info-field">
         <label>Web App URL</label>
         <input type="text" class="sync-url-input" id="syncUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
       </div>
-      
       <div class="sync-buttons">
         <button class="btn-sync-save" id="saveSyncUrl">💾 Save</button>
         <button class="btn-sync-test" id="testSyncUrl">🔍 Test</button>
       </div>
-      
       <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
         <h4>📤 Sync Actions</h4>
         <div class="sync-buttons">
-          <button class="btn-sync-send" id="syncSendBtn">☁️ Save to Sheet</button>
-          <button class="btn-sync-load" id="syncLoadBtn">⬇️ Load from Sheet</button>
+          <button class="btn-sync-send" id="syncSendBtn">☁️ Save</button>
+          <button class="btn-sync-load" id="syncLoadBtn">⬇️ Load</button>
         </div>
         <div class="sync-buttons" style="margin-top:8px">
-          <button class="btn-sync-clear" id="syncClearBtn">🗑️ Clear Sheet-এর ডেটা</button>
+          <button class="btn-sync-clear" id="syncClearBtn">🗑️ Clear</button>
         </div>
       </div>
-      
       <div style="margin-top:14px">
         <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer">
           <input type="checkbox" id="autoSyncToggle">
@@ -585,7 +793,6 @@ body{
         </label>
       </div>
     </div>
-
     <div class="modal-buttons">
       <button class="btn-primary" id="closeSettings">বন্ধ করো</button>
     </div>
@@ -604,7 +811,7 @@ body{
 "use strict";
 
 /* ============================================================
-   ১. ডেটা
+   ১. ডেটা টেমপ্লেট
    ============================================================ */
 const weekTemplates = [
 {title:"আইডিয়া ও সক্ষমতা যাচাই",goal:"নিজের দক্ষতা ও বাজারের সমস্যা বোঝা",tasks:["নিজের দক্ষতা, ডিভাইস, সময় ও আর্থিক সীমা লিখে ফেলো","ডিজিটাল সার্ভিস, নেটওয়ার্কিং ও পণ্য ব্যবসার তুলনা করো","১০ জন সম্ভাব্য কাস্টমারের নাম ও ব্যবসার তালিকা তৈরি করো","কমপক্ষে ৩ জন দোকানদারের সাথে কথা বলো","আরও ৩ জনের সমস্যা, অর্ডার পদ্ধতি ও বাজেট বোঝো","মোট ৬ জনের ফিডব্যাক বিশ্লেষণ করো","প্রাথমিক ব্যবসার আইডিয়া ও কাস্টমার গ্রুপ নির্বাচন করো"]},
@@ -622,21 +829,36 @@ const weekTemplates = [
 {title:"চূড়ান্ত মূল্যায়ন",goal:"পরবর্তী Quarter-এর পরিকল্পনা",tasks:["৯০ দিনের সব সাফল্য ও ব্যর্থতার তালিকা দেখো","সবচেয়ে সফল ৩টি কাজ ও ৩টি ভুল লিখো","কাস্টমার সাড়া না দিলে কী পরিবর্তন দরকার নির্ধারণ করো","সার্ভিস স্কেল করার ব্লুপ্রিন্ট তৈরি করো","পরবর্তী Quarter-এর আউটরিচ ও আয়ের লক্ষ্য চূড়ান্ত করো","নতুন উদ্যমে পরবর্তী দিনপঞ্জি প্রস্তুত করো!"]}
 ];
 
-const budgetCategories = [
-  "ইন্টারনেট / যোগাযোগ","যাতায়াত","ডেমো / পোর্টফোলিও",
-  "পরীক্ষামূলক প্রচার","টুলস / সফটওয়্যার","জরুরি রিজার্ভ"
-];
+const budgetCategories = ["ইন্টারনেট / যোগাযোগ","যাতায়াত","ডেমো / পোর্টফোলিও","পরীক্ষামূলক প্রচার","টুলস / সফটওয়্যার","জরুরি রিজার্ভ"];
+
+const expenseCategories = ["ইন্টারনেট","যাতায়াত","খাবার","কাস্টমার মিটিং","বিজ্ঞাপন","টুলস","শিক্ষা","অন্যান্য"];
+
+const habitList_default = ["📚 ১০ মিনিট পড়া","🏃 ৫ মিনিট ব্যায়াম","🧘 ৫ মিনিট মেডিটেশন","📝 রাতে রিভিউ","🚫 সোশ্যাল মিডিয়া নিয়ন্ত্রণ"];
+
+const weekDays = ["সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি","রবি"];
 
 /* ============================================================
    ২. স্টেট
    ============================================================ */
-const STORE = "business_quarterly_v4";
+const STORE = "business_full_v5";
 const SYNC_URL_KEY = "business_sync_url";
 const LAST_SYNC_KEY = "business_last_sync";
 const AUTO_SYNC_KEY = "business_auto_sync";
 
 function defaultState(){
-  return { quarters: [], activeQId: null, theme: "light" };
+  return {
+    quarters: [],
+    activeQId: null,
+    daily: [],       // [{date, outreach, hours, income, expense, energy, mood, notes, tasksDone}]
+    weeklyReviews: {}, // {weekKey: {success, best, worst, learned, change, energy}}
+    customers: [],   // [{id, name, phone, source, service, amount, status, firstContact, lastContact, nextFollowup, totalValue, notes}]
+    expenses: [],    // [{id, date, category, amount, reason, result, quarter}]
+    timeLog: [],     // [{id, date, task, minutes, result}]
+    goals: [],       // [{id, title, target, deadline, done, category}]
+    habits: {        // {habitName: {date: true}}
+    },
+    theme: "light"
+  };
 }
 
 function defaultQuarter(name, startDate){
@@ -661,6 +883,17 @@ try{
     const loaded = JSON.parse(raw);
     state = Object.assign(defaultState(), loaded);
     if(!Array.isArray(state.quarters)) state.quarters = [];
+    if(!Array.isArray(state.daily)) state.daily = [];
+    if(!Array.isArray(state.customers)) state.customers = [];
+    if(!Array.isArray(state.expenses)) state.expenses = [];
+    if(!Array.isArray(state.timeLog)) state.timeLog = [];
+    if(!Array.isArray(state.goals)) state.goals = [];
+    if(!state.weeklyReviews || typeof state.weeklyReviews !== "object") state.weeklyReviews = {};
+    if(!state.habits || typeof state.habits !== "object") state.habits = {};
+    // প্রথমবার habit তৈরি
+    if(Object.keys(state.habits).length === 0){
+      habitList_default.forEach(h => state.habits[h] = {});
+    }
   }
 }catch(e){ state = defaultState(); }
 
@@ -669,12 +902,8 @@ let lastSyncTime = localStorage.getItem(LAST_SYNC_KEY) || "";
 let autoSyncEnabled;
 {
   const stored = localStorage.getItem(AUTO_SYNC_KEY);
-  if(stored === null){
-    autoSyncEnabled = true;
-    localStorage.setItem(AUTO_SYNC_KEY, "true");
-  } else {
-    autoSyncEnabled = stored === "true";
-  }
+  if(stored === null){ autoSyncEnabled = true; localStorage.setItem(AUTO_SYNC_KEY, "true"); }
+  else { autoSyncEnabled = stored === "true"; }
 }
 
 /* ============================================================
@@ -692,6 +921,19 @@ function formatDate(iso){
   const months = ["জানু","ফেব","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগ","সেপ","অক্টো","নভে","ডিসে"];
   return parseInt(d) + " " + months[parseInt(m)-1] + " " + y;
 }
+function shortDate(iso){
+  if(!iso) return "";
+  const [y,m,d] = iso.split("-");
+  return d + "/" + m;
+}
+function getWeekKey(dateStr){
+  const d = new Date(dateStr);
+  const dayOfWeek = d.getDay(); // 0=Sunday
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + mondayOffset);
+  return monday.toISOString().slice(0,10);
+}
 function toast(msg, type){
   const t = document.getElementById("toast");
   if(!t) return;
@@ -705,9 +947,10 @@ function getActiveQuarter(){
   return state.quarters.find(q => q.id === state.activeQId) || null;
 }
 function num(v){ const n = Number(v); return isNaN(n) ? 0 : n; }
+function uid(){ return Date.now() + "_" + Math.random().toString(36).slice(2,7); }
 
 /* ============================================================
-   ৪. হিসাব
+   ৪. হিসাব ফাংশন
    ============================================================ */
 function qIncome(q){
   let sum = 0;
@@ -732,8 +975,28 @@ function qTasksDone(q){
 }
 function qCustomers(q){ return (q.pipeline && q.pipeline.sold) || 0; }
 
+function getTodayDaily(){
+  const todayStr = today();
+  let entry = state.daily.find(d => d.date === todayStr);
+  if(!entry){
+    entry = { date: todayStr, outreach: 0, hours: 0, income: 0, expense: 0, energy: "", mood: "", notes: "", tasksDone: 0 };
+    state.daily.push(entry);
+  }
+  return entry;
+}
+
+function getLast7Days(){
+  const days = [];
+  for(let i = 6; i >= 0; i--){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d.toISOString().slice(0,10));
+  }
+  return days;
+}
+
 /* ============================================================
-   ৫. save() — Auto Sync ট্রিগার সহ
+   ৫. save + auto sync
    ============================================================ */
 function save(){
   try{ localStorage.setItem(STORE, JSON.stringify(state)); }
@@ -742,30 +1005,25 @@ function save(){
 }
 
 /* ============================================================
-   ৬. Sync System (নির্ভরযোগ্য)
+   ৬. Sync System
    ============================================================ */
 let syncInProgress = false;
-let autoSyncTimer = null;      // debounced 20s
-let periodicSyncTimer = null;  // প্রতি ৩ মিনিটে
+let autoSyncTimer = null;
+let periodicSyncTimer = null;
 
 function scheduleAutoSync(){
-  if(!syncUrl) return;
-  if(!autoSyncEnabled) return;
+  if(!syncUrl || !autoSyncEnabled) return;
   if(autoSyncTimer) clearTimeout(autoSyncTimer);
   autoSyncTimer = setTimeout(() => {
     autoSyncTimer = null;
-    console.log("[Auto-sync] Triggered by data change");
     syncToSheet(false);
-  }, 20000); // ২০ সেকেন্ড
+  }, 20000);
 }
 
 function startPeriodicSync(){
   if(periodicSyncTimer) clearInterval(periodicSyncTimer);
   if(!autoSyncEnabled || !syncUrl) return;
-  periodicSyncTimer = setInterval(() => {
-    console.log("[Auto-sync] Periodic (3 min)");
-    syncToSheet(false);
-  }, 3 * 60 * 1000);
+  periodicSyncTimer = setInterval(() => syncToSheet(false), 3 * 60 * 1000);
 }
 
 async function syncToSheet(showMsg){
@@ -775,177 +1033,116 @@ async function syncToSheet(showMsg){
     return false;
   }
   if(syncInProgress){
-    console.log("[Sync] Already in progress, skipping");
     if(showMsg === true) toast("⏳ Sync ইতিমধ্যে চলছে...");
     return false;
   }
-  
   syncInProgress = true;
   updateSyncStatus("syncing");
   if(showMsg !== false) toast("☁️ Google Sheet-এ সেভ হচ্ছে...");
-  
   try{
     const payload = encodeURIComponent(JSON.stringify(state));
     const url = syncUrl + "?action=save&data=" + payload;
-    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    const response = await fetch(url, { 
-      method: "GET",
-      signal: controller.signal,
-      redirect: "follow"
-    });
+    const response = await fetch(url, { method: "GET", signal: controller.signal });
     clearTimeout(timeoutId);
-    
-    if(!response.ok){
-      throw new Error("HTTP " + response.status);
-    }
-    
+    if(!response.ok) throw new Error("HTTP " + response.status);
     const result = await response.json();
-    
     if(result.ok){
       const t = new Date().toLocaleTimeString("bn-BD", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       lastSyncTime = t;
       localStorage.setItem(LAST_SYNC_KEY, t);
       updateSyncStatus("success", t);
-      console.log("[Sync] Success at", t);
-      if(showMsg !== false) toast("✅ Google Sheet-এ সেভ হয়েছে!", "success");
+      if(showMsg !== false) toast("✅ সেভ হয়েছে!", "success");
       syncInProgress = false;
       return true;
     } else {
-      throw new Error(result.error || "Unknown error");
+      throw new Error(result.error || "Unknown");
     }
   }catch(err){
-    console.error("[Sync] Error:", err);
     updateSyncStatus("error");
-    if(err.name === "AbortError"){
-      if(showMsg !== false) toast("❌ Timeout — সার্ভার সাড়া দিচ্ছে না", "error");
-    } else {
-      if(showMsg !== false) toast("❌ " + err.message, "error");
-    }
+    if(showMsg !== false) toast("❌ " + err.message, "error");
     syncInProgress = false;
     return false;
   }
 }
 
 async function loadFromSheet(){
-  if(!syncUrl){
-    toast("⚠️ আগে Settings-এ Web App URL দাও", "error");
-    return;
-  }
+  if(!syncUrl){ toast("⚠️ আগে Settings-এ URL দাও", "error"); return; }
   if(!confirm("Google Sheet থেকে লোড করলে বর্তমান ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
-  
-  toast("⬇️ Google Sheet থেকে লোড হচ্ছে...");
-  
+  toast("⬇️ লোড হচ্ছে...");
   try{
     const url = syncUrl + "?action=load&_t=" + Date.now();
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
-    
-    const response = await fetch(url, { 
-      method: "GET",
-      signal: controller.signal
-    });
+    const response = await fetch(url, { signal: controller.signal });
     clearTimeout(timeoutId);
-    
     const result = await response.json();
-    
     if(result.ok && result.data){
       state = Object.assign(defaultState(), result.data);
-      if(!Array.isArray(state.quarters)) state.quarters = [];
       localStorage.setItem(STORE, JSON.stringify(state));
-      toast("✅ ডেটা লোড হয়েছে! রিফ্রেশ হচ্ছে...", "success");
+      toast("✅ লোড হয়েছে! রিফ্রেশ হচ্ছে...", "success");
       setTimeout(() => location.reload(), 800);
-    } else if(result.ok && !result.data){
-      toast("⚠️ Google Sheet-এ কোনো ডেটা নেই", "error");
+    } else if(result.ok){
+      toast("⚠️ Sheet-এ কোনো ডেটা নেই");
     } else {
-      toast("❌ Load ব্যর্থ: " + (result.error || "Unknown"), "error");
+      toast("❌ " + (result.error || "Error"), "error");
     }
   }catch(err){
-    console.error("Load error:", err);
     toast("❌ Network সমস্যা: " + err.message, "error");
   }
 }
 
 async function testConnection(){
-  if(!syncUrl){
-    toast("⚠️ আগে URL সেভ করো", "error");
-    return;
-  }
+  if(!syncUrl){ toast("⚠️ আগে URL সেভ করো", "error"); return; }
   toast("🔍 Testing...");
   try{
     const response = await fetch(syncUrl + "?action=ping&_t=" + Date.now());
     const result = await response.json();
-    if(result.ok){
-      toast("✅ সংযোগ কাজ করছে!", "success");
-    } else {
-      toast("❌ সার্ভার সমস্যা", "error");
-    }
+    if(result.ok) toast("✅ সংযোগ কাজ করছে!", "success");
+    else toast("❌ সার্ভার সমস্যা", "error");
   }catch(err){
-    toast("❌ সংযোগ ব্যর্থ: " + err.message, "error");
+    toast("❌ " + err.message, "error");
   }
 }
 
 async function clearSheet(){
-  if(!syncUrl){
-    toast("⚠️ আগে URL সেভ করো", "error");
-    return;
-  }
-  if(!confirm("⚠️ Google Sheet-এর সব ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
-  
+  if(!syncUrl){ toast("⚠️ আগে URL দাও", "error"); return; }
+  if(!confirm("⚠️ Sheet-এর সব ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
   try{
     const response = await fetch(syncUrl + "?action=clear&_t=" + Date.now());
     const result = await response.json();
-    if(result.ok){
-      toast("🗑️ Google Sheet clear হয়েছে", "success");
-      updateSyncStatus("idle");
-    } else {
-      toast("❌ Clear ব্যর্থ", "error");
-    }
-  }catch(err){
-    toast("❌ Network সমস্যা", "error");
-  }
+    if(result.ok) toast("🗑️ Clear হয়েছে", "success");
+    else toast("❌ Clear ব্যর্থ", "error");
+  }catch(err){ toast("❌ " + err.message, "error"); }
 }
 
 function updateSyncStatus(status, timeStr){
   const statusEl = document.getElementById("syncStatus");
   const badgeEl = document.getElementById("syncBadge");
   const quickBtn = document.getElementById("quickSyncBtn");
-  
   if(!statusEl) return;
-  
-  // Quick Sync বাটনের class reset
-  if(quickBtn){
-    quickBtn.className = "icon-btn";
-  }
-  
+  if(quickBtn) quickBtn.className = "icon-btn";
   if(!syncUrl){
     statusEl.textContent = "⚙️ URL দাও";
-    statusEl.className = "sync-status";
-    if(badgeEl){ badgeEl.textContent = "⚙️ Settings-এ URL দাও"; badgeEl.className = "sync-badge"; }
+    if(badgeEl){ badgeEl.textContent = "⚙️ URL দাও"; badgeEl.className = "sync-badge"; }
     return;
   }
-  
   if(status === "syncing"){
     statusEl.textContent = "⏳ Syncing...";
-    statusEl.className = "sync-status";
     if(badgeEl){ badgeEl.textContent = "⏳ Syncing..."; badgeEl.className = "sync-badge"; }
     if(quickBtn) quickBtn.className = "icon-btn syncing";
   } else if(status === "success"){
     const t = timeStr || lastSyncTime || "এখন";
     statusEl.textContent = "✅ Synced";
-    statusEl.className = "sync-status";
     if(badgeEl){ badgeEl.textContent = "✅ শেষ Sync: " + t; badgeEl.className = "sync-badge active"; }
     if(quickBtn) quickBtn.className = "icon-btn synced";
   } else if(status === "error"){
-    statusEl.textContent = "❌ Sync ব্যর্থ";
-    statusEl.className = "sync-status";
+    statusEl.textContent = "❌ ব্যর্থ";
     if(badgeEl){ badgeEl.textContent = "❌ Sync ব্যর্থ"; badgeEl.className = "sync-badge"; }
     if(quickBtn) quickBtn.className = "icon-btn error";
   } else {
     statusEl.textContent = "⚪ Synced হয়নি";
-    statusEl.className = "sync-status";
     if(badgeEl){ badgeEl.textContent = "⚪ Synced হয়নি"; badgeEl.className = "sync-badge"; }
   }
 }
@@ -957,7 +1154,6 @@ function createQuarter(startDate, customName){
   if(!startDate) startDate = today();
   const qNum = state.quarters.length + 1;
   const q = defaultQuarter(customName || "Quarter " + qNum, startDate);
-
   if(state.quarters.length > 0){
     const prev = state.quarters[state.quarters.length - 1];
     const prevIncome = qIncome(prev);
@@ -973,7 +1169,6 @@ function createQuarter(startDate, customName){
     q.targetCustomers = "৩";
     q.targetText = "প্রথম Quarter-এ ৩ জন পেইড কাস্টমার পাওয়া";
   }
-
   state.quarters.push(q);
   state.activeQId = q.id;
   save();
@@ -981,183 +1176,641 @@ function createQuarter(startDate, customName){
 }
 
 /* ============================================================
-   ৮. Quarter UI
+   ৮. RENDER — Today Tab
    ============================================================ */
-function renderQuarterSelect(){
-  const sel = document.getElementById("quarterSelect");
-  if(!sel) return;
-  sel.innerHTML = "";
-  state.quarters.forEach(q => {
-    const o = document.createElement("option");
-    o.value = q.id;
-    o.textContent = `${q.name} (${formatDate(q.startDate)} → ${formatDate(q.endDate)})`;
-    if(q.id === state.activeQId) o.selected = true;
-    sel.appendChild(o);
+function renderToday(){
+  const entry = getTodayDaily();
+  const todayDateEl = document.getElementById("todayDate");
+  if(todayDateEl) todayDateEl.textContent = formatDate(entry.date);
+  document.getElementById("dOutreach").value = entry.outreach || "";
+  document.getElementById("dHours").value = entry.hours || "";
+  document.getElementById("dIncome").value = entry.income || "";
+  document.getElementById("dExpense").value = entry.expense || "";
+  document.getElementById("dEnergy").value = entry.energy || "";
+  document.getElementById("dMood").value = entry.mood || "";
+  document.getElementById("dNotes").value = entry.notes || "";
+  renderDailyChart();
+  renderRecentDaily();
+}
+
+function bindToday(){
+  const saveBtn = document.getElementById("saveDailyBtn");
+  if(saveBtn) saveBtn.addEventListener("click", () => {
+    const entry = getTodayDaily();
+    entry.outreach = num(document.getElementById("dOutreach").value);
+    entry.hours = num(document.getElementById("dHours").value);
+    entry.income = num(document.getElementById("dIncome").value);
+    entry.expense = num(document.getElementById("dExpense").value);
+    entry.energy = document.getElementById("dEnergy").value;
+    entry.mood = document.getElementById("dMood").value;
+    entry.notes = document.getElementById("dNotes").value;
+    save();
+    toast("✅ আজকের এন্ট্রি সেভ হয়েছে!", "success");
+    renderDailyChart();
+    renderRecentDaily();
+    renderTodayDashboard();
   });
 }
 
-function renderQuarterStatus(){
-  const q = getActiveQuarter();
-  const el = document.getElementById("qStatus");
-  if(!q || !el){ if(el) el.textContent = "—"; return; }
-  const start = new Date(q.startDate);
-  const now = new Date();
-  const diff = Math.floor((now - start) / (1000*60*60*24));
-  const remain = Math.max(0, 90 - diff);
-  if(diff < 0){
-    el.textContent = `🔵 শুরু হবে ${formatDate(q.startDate)}-এ`;
-  } else if(diff >= 90){
-    el.textContent = `🔴 সম্পন্ন হয়েছে`;
-  } else {
-    el.textContent = `🟢 দিন ${bn(diff+1)}/৯০ · বাকি ${bn(remain)} দিন`;
-  }
-}
-
-/* ============================================================
-   ৯. KPI Chart
-   ============================================================ */
-function renderKPIChart(){
-  const barsEl = document.getElementById("kpiChartBars");
-  const yAxisEl = document.getElementById("kpiChartYAxis");
+function renderDailyChart(){
+  const barsEl = document.getElementById("dailyChartBars");
+  const yAxisEl = document.getElementById("dailyChartYAxis");
   if(!barsEl || !yAxisEl) return;
-  const q = getActiveQuarter();
-  if(!q) return;
-
-  const vals = [];
-  for(let i = 0; i < 13; i++) vals.push(q.kpi[i] ? num(q.kpi[i].m) : 0);
-
+  const days = getLast7Days();
+  const vals = days.map(d => {
+    const e = state.daily.find(x => x.date === d);
+    return e ? num(e.income) : 0;
+  });
   const dataMax = Math.max.apply(null, vals.concat([100]));
   const mag = Math.pow(10, Math.floor(Math.log10(dataMax || 1)));
   const maxV = Math.ceil(dataMax / mag) * mag || 100;
-
   let yHTML = "";
-  for(let i = 4; i >= 0; i--){
-    yHTML += '<span>৳' + bn(Math.round(maxV/4*i)) + '</span>';
-  }
+  for(let i = 4; i >= 0; i--) yHTML += '<span>৳' + bn(Math.round(maxV/4*i)) + '</span>';
   yAxisEl.innerHTML = yHTML;
-
   let barsHTML = "";
   vals.forEach((v, i) => {
-    const pct = maxV > 0 ? (v / maxV) * 100 : 0;
-    const isEmpty = v === 0;
+    const pct = maxV > 0 ? (v/maxV)*100 : 0;
     const hasValue = v > 0;
-    barsHTML += '<div class="chart-bar-wrap ' + (hasValue ? 'has-value' : '') + '" title="সপ্তাহ ' + bn(i+1) + ': ৳' + bn(v) + '">' +
-      '<div class="chart-bar-value">' + (hasValue ? '৳' + bn(v) : '') + '</div>' +
-      '<div class="chart-bar ' + (isEmpty ? 'empty' : '') + '" style="height:' + Math.max(2, pct) + '%"></div>' +
-      '<div class="chart-bar-label">স' + bn(i+1) + '</div>' +
+    const dayName = ["রবি","সোম","মঙ্গল","বুধ","বৃহ","শুক্র","শনি"][new Date(days[i]).getDay()];
+    barsHTML += '<div class="chart-bar-wrap ' + (hasValue ? 'has-value' : '') + '">' +
+      '<div class="chart-bar-value">' + (hasValue ? '৳'+bn(v) : '') + '</div>' +
+      '<div class="chart-bar ' + (hasValue ? '' : 'empty') + '" style="height:' + Math.max(2, pct) + '%"></div>' +
+      '<div class="chart-bar-label">' + dayName + '</div>' +
       '<div class="chart-bar-dot"></div></div>';
   });
   barsEl.innerHTML = barsHTML;
-
-  barsEl.querySelectorAll(".chart-bar-wrap").forEach((bar, i) => {
-    bar.addEventListener("click", () => {
-      toast("সপ্তাহ " + (i+1) + ": ৳" + bn(vals[i]) + " আয়");
-    });
-  });
 }
 
-/* ============================================================
-   ১০. Quarter Comparison Chart
-   ============================================================ */
-function renderCompareChart(metric){
-  const container = document.getElementById("compareChart");
-  if(!container) return;
-  container.innerHTML = "";
-  if(state.quarters.length === 0) return;
-
-  const values = state.quarters.map(q => {
-    switch(metric){
-      case "income": return qIncome(q);
-      case "profit": return qProfit(q);
-      case "customers": return qCustomers(q);
-      case "expense": return qExpense(q);
-      case "tasks": return qTasksDone(q);
-      default: return 0;
-    }
-  });
-
-  const maxV = Math.max.apply(null, values.concat([1]));
-  const unit = (metric === "customers" || metric === "tasks") ? "" : "৳";
-  const activeIdx = state.quarters.findIndex(q => q.id === state.activeQId);
-
-  state.quarters.forEach((q, i) => {
-    const v = values[i];
-    const pct = (v / maxV) * 100;
-    const isActive = i === activeIdx;
-    const isEmpty = v === 0;
-
-    const bar = document.createElement("div");
-    bar.className = "cc-bar" + (isActive ? " active" : "") + (isEmpty ? " empty" : "");
-    bar.title = `${q.name}: ${unit}${bn(v)}`;
-    bar.innerHTML = `
-      <div class="cc-value ${v > 0 ? 'show' : ''}">${v > 0 ? unit + bn(v) : ''}</div>
-      <div class="cc-bar-fill" style="height:${Math.max(2, pct)}%"></div>
-      <div class="cc-label">${q.name.replace('Quarter ', 'Q')}</div>
+function renderRecentDaily(){
+  const tbody = document.getElementById("recentDailyBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  const recent = state.daily.slice().sort((a,b)=>b.date.localeCompare(a.date)).slice(0, 10);
+  if(recent.length === 0){
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">কোনো এন্ট্রি নেই</td></tr>';
+    return;
+  }
+  recent.forEach(e => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${shortDate(e.date)}</td>
+      <td>${bn(e.outreach||0)}</td>
+      <td>${bn(e.hours||0)}</td>
+      <td style="color:var(--brand);font-weight:700">৳${bn(e.income||0)}</td>
+      <td style="color:var(--danger)">৳${bn(e.expense||0)}</td>
+      <td>${e.energy || "—"}</td>
+      <td style="font-size:.78rem;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis">${e.notes || "—"}</td>
     `;
-    bar.addEventListener("click", () => switchQuarter(q.id));
-    container.appendChild(bar);
+    tbody.appendChild(tr);
   });
 }
 
 /* ============================================================
-   ১১. Dashboard
+   ৯. Today Dashboard (উপরে)
    ============================================================ */
-function renderDashboard(){
+function renderTodayDashboard(){
+  const el = document.getElementById("todayDashboard");
+  if(!el) return;
+  const entry = getTodayDaily();
   const q = getActiveQuarter();
-  const el = document.getElementById("dashboard");
-  if(!q || !el) return;
-
-  const income = qIncome(q);
-  const expense = qExpense(q);
-  const profit = qProfit(q);
-  const sold = qSold(q);
-  const tasks = qTasksDone(q);
-  const tasksPct = Math.round(tasks/90*100);
-
-  const targetIncome = num(q.targetIncome);
-  const targetProfit = num(q.targetProfit);
-  const targetCustomers = num(q.targetCustomers);
-
-  const incomePct = targetIncome > 0 ? Math.round((income/targetIncome)*100) : 0;
-  const profitPct = targetProfit > 0 ? Math.round((profit/targetProfit)*100) : 0;
-  const custPct = targetCustomers > 0 ? Math.round((sold/targetCustomers)*100) : 0;
-
+  const tasksDone = q ? qTasksDone(q) : 0;
+  const income = num(entry.income);
+  const expense = num(entry.expense);
+  const profit = income - expense;
   el.innerHTML = `
     <div class="dash-card green">
-      <div class="dash-icon">💰</div>
-      <div class="dash-value">৳${bn(income)}</div>
-      <div class="dash-label">মোট আয়</div>
-      <div class="dash-sub">${targetIncome > 0 ? 'Target: ৳'+bn(targetIncome)+' ('+bn(incomePct)+'%)' : 'Target সেট করো'}</div>
+      <div class="dash-icon">🎯</div>
+      <div class="dash-value">${bn(entry.outreach||0)}</div>
+      <div class="dash-label">আজকের আউটরিচ</div>
+      <div class="dash-sub">লক্ষ্য: ৫ জন</div>
     </div>
     <div class="dash-card orange">
-      <div class="dash-icon">💸</div>
-      <div class="dash-value">৳${bn(expense)}</div>
-      <div class="dash-label">মোট খরচ</div>
-      <div class="dash-sub">${income > 0 ? bn(Math.round(expense/income*100))+'% আয়ের' : '—'}</div>
+      <div class="dash-icon">⏱️</div>
+      <div class="dash-value">${bn(entry.hours||0)} ঘণ্টা</div>
+      <div class="dash-label">আজ কাজ করেছি</div>
+      <div class="dash-sub">লক্ষ্য: ২ ঘণ্টা</div>
     </div>
-    <div class="dash-card ${profit >= 0 ? 'blue' : 'pink'}">
-      <div class="dash-icon">${profit >= 0 ? '📈' : '📉'}</div>
-      <div class="dash-value">৳${bn(profit)}</div>
-      <div class="dash-label">${profit >= 0 ? 'লাভ' : 'ক্ষতি'}</div>
-      <div class="dash-sub">${targetProfit > 0 ? 'Target: ৳'+bn(targetProfit)+' ('+bn(profitPct)+'%)' : 'Target সেট করো'}</div>
+    <div class="dash-card blue">
+      <div class="dash-icon">💰</div>
+      <div class="dash-value">৳${bn(income)}</div>
+      <div class="dash-label">আজকের আয়</div>
+      <div class="dash-sub">${profit >= 0 ? "লাভ: ৳"+bn(profit) : "ক্ষতি: ৳"+bn(Math.abs(profit))}</div>
     </div>
     <div class="dash-card purple">
-      <div class="dash-icon">👥</div>
-      <div class="dash-value">${bn(sold)}</div>
-      <div class="dash-label">পেইড কাস্টমার</div>
-      <div class="dash-sub">${targetCustomers > 0 ? 'Target: '+bn(targetCustomers)+' ('+bn(custPct)+'%)' : 'Target সেট করো'}</div>
-    </div>
-    <div class="dash-card green">
       <div class="dash-icon">✅</div>
-      <div class="dash-value">${bn(tasks)}</div>
-      <div class="dash-label">টাস্ক সম্পন্ন</div>
-      <div class="dash-sub">${bn(tasksPct)}% অগ্রগতি</div>
+      <div class="dash-value">${bn(tasksDone)}</div>
+      <div class="dash-label">Quarter-এর টাস্ক</div>
+      <div class="dash-sub">${bn(Math.round(tasksDone/90*100))}% সম্পন্ন</div>
     </div>
   `;
 }
 
 /* ============================================================
-   ১২. Overview
+   ১০. Weekly Review
+   ============================================================ */
+function getWeekData(weekKey){
+  const weekStart = weekKey;
+  const weekEnd = new Date(weekKey);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const end = weekEnd.toISOString().slice(0,10);
+  const daysInWeek = state.daily.filter(d => d.date >= weekStart && d.date <= end);
+  const total = daysInWeek.reduce((acc, d) => ({
+    outreach: acc.outreach + num(d.outreach),
+    hours: acc.hours + num(d.hours),
+    income: acc.income + num(d.income),
+    expense: acc.expense + num(d.expense),
+    energy: d.energy ? (acc.energy + num(d.energy)) : acc.energy,
+    energyCount: d.energy ? acc.energyCount + 1 : acc.energyCount
+  }), {outreach:0, hours:0, income:0, expense:0, energy:0, energyCount:0});
+  total.avgEnergy = total.energyCount > 0 ? (total.energy / total.energyCount).toFixed(1) : "—";
+  return { ...total, weekStart, weekEnd: end, daysInWeek };
+}
+
+function renderWeek(){
+  const weekKey = getWeekKey(today());
+  const data = getWeekData(weekKey);
+  const mini = document.getElementById("weekKpiMini");
+  if(mini){
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(data.outreach)}</div>
+        <div class="kpi-mini-label">আউটরিচ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(data.hours)}</div>
+        <div class="kpi-mini-label">ঘণ্টা</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(data.income)}</div>
+        <div class="kpi-mini-label">আয়</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(data.expense)}</div>
+        <div class="kpi-mini-label">খরচ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${data.avgEnergy}</div>
+        <div class="kpi-mini-label">Avg Energy</div>
+      </div>
+    `;
+  }
+  const review = state.weeklyReviews[weekKey] || {};
+  document.getElementById("wrSuccess").value = review.success || "";
+  document.getElementById("wrBest").value = review.best || "";
+  document.getElementById("wrWorst").value = review.worst || "";
+  document.getElementById("wrLearned").value = review.learned || "";
+  document.getElementById("wrChange").value = review.change || "";
+  document.getElementById("wrEnergy").value = review.energy || "";
+  // আগের সপ্তাহগুলোর তুলনা
+  const tbody = document.getElementById("weeklyCompareBody");
+  if(tbody){
+    tbody.innerHTML = "";
+    const weekKeys = [];
+    for(let i = 0; i < 8; i++){
+      const d = new Date();
+      d.setDate(d.getDate() - i*7);
+      weekKeys.push(getWeekKey(d.toISOString().slice(0,10)));
+    }
+    const uniqueWeeks = [...new Set(weekKeys)];
+    uniqueWeeks.forEach(wk => {
+      const wd = getWeekData(wk);
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><strong>${shortDate(wk)} থেকে ৭ দিন</strong></td>
+        <td>${bn(wd.outreach)}</td>
+        <td>${bn(wd.hours)}</td>
+        <td style="color:var(--brand);font-weight:700">৳${bn(wd.income)}</td>
+        <td style="color:var(--danger)">৳${bn(wd.expense)}</td>
+        <td>${wd.avgEnergy}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+}
+
+function bindWeek(){
+  const saveBtn = document.getElementById("saveWeeklyBtn");
+  if(saveBtn) saveBtn.addEventListener("click", () => {
+    const weekKey = getWeekKey(today());
+    state.weeklyReviews[weekKey] = {
+      success: document.getElementById("wrSuccess").value,
+      best: document.getElementById("wrBest").value,
+      worst: document.getElementById("wrWorst").value,
+      learned: document.getElementById("wrLearned").value,
+      change: document.getElementById("wrChange").value,
+      energy: document.getElementById("wrEnergy").value
+    };
+    save();
+    toast("✅ সাপ্তাহিক Review সেভ হয়েছে!", "success");
+  });
+}
+
+/* ============================================================
+   ১১. Customers (CRM)
+   ============================================================ */
+function renderCustomers(){
+  const mini = document.getElementById("customerKpiMini");
+  if(mini){
+    const total = state.customers.length;
+    const paid = state.customers.filter(c => c.status === "Paid").length;
+    const negotiating = state.customers.filter(c => c.status === "Negotiating").length;
+    const totalValue = state.customers.reduce((s, c) => s + num(c.amount), 0);
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(total)}</div>
+        <div class="kpi-mini-label">মোট কাস্টমার</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="color:#10b981">${bn(paid)}</div>
+        <div class="kpi-mini-label">Paid</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="color:var(--accent)">${bn(negotiating)}</div>
+        <div class="kpi-mini-label">Negotiating</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(totalValue)}</div>
+        <div class="kpi-mini-label">মোট মূল্য</div>
+      </div>
+    `;
+  }
+  const tbody = document.getElementById("customerBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  if(state.customers.length === 0){
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">কোনো কাস্টমার নেই। "নতুন কাস্টমার" বাটনে ক্লিক করুন।</td></tr>';
+    return;
+  }
+  state.customers.forEach(c => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><strong>${c.name || "—"}</strong></td>
+      <td>${c.phone || "—"}</td>
+      <td>${c.source || "—"}</td>
+      <td>${c.service || "—"}</td>
+      <td style="color:var(--brand);font-weight:700">৳${bn(num(c.amount))}</td>
+      <td>${statusBadge(c.status)}</td>
+      <td>${c.nextFollowup ? shortDate(c.nextFollowup) : "—"}</td>
+      <td style="font-size:.78rem;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis">${c.notes || "—"}</td>
+      <td style="white-space:nowrap">
+        <button class="btn-del" onclick="editCustomer('${c.id}')">✏️</button>
+        <button class="btn-del" onclick="deleteCustomer('${c.id}')">🗑️</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function statusBadge(status){
+  const map = {
+    "Paid": "background:#d1fae5;color:#065f46",
+    "Negotiating": "background:#fef3c7;color:#92400e",
+    "New": "background:#dbeafe;color:#1e40af",
+    "Lost": "background:#fee2e2;color:#991b1b"
+  };
+  const style = map[status] || "background:#e2e8f0;color:#475569";
+  return `<span style="${style};padding:2px 8px;border-radius:99px;font-size:.72rem;font-weight:700">${status || "New"}</span>`;
+}
+
+function showCustomerModal(customer){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  const c = customer || {};
+  content.innerHTML = `
+    <h3>${customer ? "✏️ কাস্টমার এডিট" : "➕ নতুন কাস্টমার"}</h3>
+    <div class="info-field">
+      <label>নাম *</label>
+      <input type="text" id="cName" value="${c.name || ""}">
+    </div>
+    <div class="info-field">
+      <label>ফোন</label>
+      <input type="text" id="cPhone" value="${c.phone || ""}">
+    </div>
+    <div class="info-field">
+      <label>সোর্স</label>
+      <select id="cSource">
+        <option value="Facebook" ${c.source==="Facebook"?"selected":""}>Facebook</option>
+        <option value="Walk-in" ${c.source==="Walk-in"?"selected":""}>Walk-in</option>
+        <option value="Referral" ${c.source==="Referral"?"selected":""}>Referral</option>
+        <option value="WhatsApp" ${c.source==="WhatsApp"?"selected":""}>WhatsApp</option>
+        <option value="Other" ${c.source==="Other"?"selected":""}>Other</option>
+      </select>
+    </div>
+    <div class="info-field">
+      <label>সার্ভিস</label>
+      <input type="text" id="cService" value="${c.service || ""}" placeholder="Starter Setup">
+    </div>
+    <div class="info-field">
+      <label>মূল্য (৳)</label>
+      <input type="number" id="cAmount" value="${c.amount || ""}">
+    </div>
+    <div class="info-field">
+      <label>স্টেটাস</label>
+      <select id="cStatus">
+        <option value="New" ${c.status==="New"?"selected":""}>New</option>
+        <option value="Negotiating" ${c.status==="Negotiating"?"selected":""}>Negotiating</option>
+        <option value="Paid" ${c.status==="Paid"?"selected":""}>Paid</option>
+        <option value="Lost" ${c.status==="Lost"?"selected":""}>Lost</option>
+      </select>
+    </div>
+    <div class="info-field">
+      <label>Next Follow-up</label>
+      <input type="date" id="cNextFollowup" value="${c.nextFollowup || ""}">
+    </div>
+    <div class="info-field">
+      <label>নোট</label>
+      <textarea id="cNotes" style="min-height:60px">${c.notes || ""}</textarea>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
+      <button class="btn-primary" onclick="saveCustomer('${c.id || ""}')">সেভ করো</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+}
+
+function saveCustomer(id){
+  const name = document.getElementById("cName").value.trim();
+  if(!name){ toast("নাম দিতে হবে", "error"); return; }
+  const data = {
+    name,
+    phone: document.getElementById("cPhone").value,
+    source: document.getElementById("cSource").value,
+    service: document.getElementById("cService").value,
+    amount: num(document.getElementById("cAmount").value),
+    status: document.getElementById("cStatus").value,
+    nextFollowup: document.getElementById("cNextFollowup").value,
+    notes: document.getElementById("cNotes").value
+  };
+  if(id){
+    const idx = state.customers.findIndex(c => c.id === id);
+    if(idx >= 0) Object.assign(state.customers[idx], data);
+  } else {
+    state.customers.push({
+      id: uid(),
+      ...data,
+      firstContact: today(),
+      lastContact: today(),
+      totalValue: data.amount
+    });
+  }
+  save();
+  closeModal();
+  renderCustomers();
+  toast("✅ সেভ হয়েছে!", "success");
+}
+
+window.editCustomer = function(id){
+  const c = state.customers.find(x => x.id === id);
+  if(c) showCustomerModal(c);
+};
+window.deleteCustomer = function(id){
+  if(confirm("কাস্টমার মুছে ফেলতে চাও?")){
+    state.customers = state.customers.filter(x => x.id !== id);
+    save(); renderCustomers();
+    toast("🗑️ মুছে ফেলা হয়েছে");
+  }
+};
+
+function bindCustomers(){
+  document.getElementById("addCustomerBtn").addEventListener("click", () => showCustomerModal(null));
+}
+
+/* ============================================================
+   ১২. Expenses
+   ============================================================ */
+function renderExpenses(){
+  const mini = document.getElementById("expenseKpiMini");
+  if(mini){
+    const total = state.expenses.reduce((s, e) => s + num(e.amount), 0);
+    const thisMonth = state.expenses.filter(e => e.date && e.date.startsWith(today().slice(0,7))).reduce((s, e) => s + num(e.amount), 0);
+    const thisWeek = state.expenses.filter(e => e.date >= getWeekKey(today())).reduce((s, e) => s + num(e.amount), 0);
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(total)}</div>
+        <div class="kpi-mini-label">মোট খরচ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(thisMonth)}</div>
+        <div class="kpi-mini-label">এই মাসে</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(thisWeek)}</div>
+        <div class="kpi-mini-label">এই সপ্তাহে</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(state.expenses.length)}</div>
+        <div class="kpi-mini-label">মোট এন্ট্রি</div>
+      </div>
+    `;
+  }
+  const tbody = document.getElementById("expenseBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  if(state.expenses.length === 0){
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:20px">কোনো খরচ নেই</td></tr>';
+    return;
+  }
+  state.expenses.slice().reverse().forEach(e => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${shortDate(e.date)}</td>
+      <td>${e.category || "—"}</td>
+      <td style="color:var(--danger);font-weight:700">৳${bn(num(e.amount))}</td>
+      <td>${e.reason || "—"}</td>
+      <td>${e.result || "—"}</td>
+      <td><button class="btn-del" onclick="deleteExpense('${e.id}')">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function showExpenseModal(){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  const catOptions = expenseCategories.map(c => `<option value="${c}">${c}</option>`).join("");
+  content.innerHTML = `
+    <h3>➕ নতুন খরচ</h3>
+    <div class="info-field">
+      <label>তারিখ</label>
+      <input type="date" id="eDate" value="${today()}">
+    </div>
+    <div class="info-field">
+      <label>খাত</label>
+      <select id="eCategory">${catOptions}</select>
+    </div>
+    <div class="info-field">
+      <label>পরিমাণ (৳)</label>
+      <input type="number" id="eAmount" placeholder="০">
+    </div>
+    <div class="info-field">
+      <label>কারণ</label>
+      <input type="text" id="eReason" placeholder="কেন এই খরচ?">
+    </div>
+    <div class="info-field">
+      <label>ফল</label>
+      <select id="eResult">
+        <option value="✅ কাজে লেগেছে">✅ কাজে লেগেছে</option>
+        <option value="⏳ কাজে লাগবে">⏳ কাজে লাগবে</option>
+        <option value="❌ নষ্ট">❌ নষ্ট</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
+      <button class="btn-primary" onclick="saveExpense()">সেভ</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+}
+
+window.saveExpense = function(){
+  const amount = num(document.getElementById("eAmount").value);
+  if(!amount){ toast("পরিমাণ দিতে হবে", "error"); return; }
+  state.expenses.push({
+    id: uid(),
+    date: document.getElementById("eDate").value || today(),
+    category: document.getElementById("eCategory").value,
+    amount,
+    reason: document.getElementById("eReason").value,
+    result: document.getElementById("eResult").value,
+    quarter: getActiveQuarter()?.name || ""
+  });
+  save();
+  closeModal();
+  renderExpenses();
+  toast("✅ খরচ সেভ হয়েছে!", "success");
+};
+
+window.deleteExpense = function(id){
+  if(confirm("খরচ মুছে ফেলতে চাও?")){
+    state.expenses = state.expenses.filter(x => x.id !== id);
+    save(); renderExpenses();
+    toast("🗑️ মুছে ফেলা হয়েছে");
+  }
+};
+
+function bindExpenses(){
+  document.getElementById("addExpenseBtn").addEventListener("click", showExpenseModal);
+}
+
+/* ============================================================
+   ১৩. Time Log
+   ============================================================ */
+function renderTime(){
+  const mini = document.getElementById("timeKpiMini");
+  if(mini){
+    const todayMin = state.timeLog.filter(t => t.date === today()).reduce((s, t) => s + num(t.minutes), 0);
+    const weekMin = state.timeLog.filter(t => t.date >= getWeekKey(today())).reduce((s, t) => s + num(t.minutes), 0);
+    const byTask = {};
+    state.timeLog.filter(t => t.date >= getWeekKey(today())).forEach(t => {
+      byTask[t.task] = (byTask[t.task] || 0) + num(t.minutes);
+    });
+    const topTask = Object.keys(byTask).sort((a,b) => byTask[b] - byTask[a])[0] || "—";
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(Math.round(todayMin/60*10)/10)} ঘণ্টা</div>
+        <div class="kpi-mini-label">আজ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(Math.round(weekMin/60*10)/10)} ঘণ্টা</div>
+        <div class="kpi-mini-label">এই সপ্তাহ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="font-size:.85rem">${topTask}</div>
+        <div class="kpi-mini-label">সবচেয়ে বেশি সময়</div>
+      </div>
+    `;
+  }
+  const tbody = document.getElementById("timeBody");
+  if(!tbody) return;
+  tbody.innerHTML = "";
+  if(state.timeLog.length === 0){
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">কোনো এন্ট্রি নেই</td></tr>';
+    return;
+  }
+  state.timeLog.slice().reverse().slice(0, 30).forEach(t => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${shortDate(t.date)}</td>
+      <td>${t.task || "—"}</td>
+      <td>${bn(num(t.minutes))} মিনিট</td>
+      <td>${t.result || "—"}</td>
+      <td><button class="btn-del" onclick="deleteTime('${t.id}')">🗑️</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function showTimeModal(){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  content.innerHTML = `
+    <h3>➕ নতুন কাজের সময়</h3>
+    <div class="info-field">
+      <label>তারিখ</label>
+      <input type="date" id="tDate" value="${today()}">
+    </div>
+    <div class="info-field">
+      <label>কাজ</label>
+      <select id="tTask">
+        <option value="আউটরিচ">🎯 আউটরিচ</option>
+        <option value="ক্লায়েন্ট কাজ">💼 ক্লায়েন্ট কাজ</option>
+        <option value="শেখা">📚 শেখা</option>
+        <option value="মার্কেটিং">📢 মার্কেটিং</option>
+        <option value="নেটওয়ার্কিং">🤝 নেটওয়ার্কিং</option>
+        <option value="সোশ্যাল মিডিয়া">📱 সোশ্যাল মিডিয়া</option>
+        <option value="অন্যান্য">📌 অন্যান্য</option>
+      </select>
+    </div>
+    <div class="info-field">
+      <label>মিনিট</label>
+      <input type="number" id="tMinutes" placeholder="৩০">
+    </div>
+    <div class="info-field">
+      <label>ফল</label>
+      <select id="tResult">
+        <option value="✅ কাজে লেগেছে">✅ কাজে লেগেছে</option>
+        <option value="⏳ ভবিষ্যতে">⏳ ভবিষ্যতে</option>
+        <option value="❌ নষ্ট">❌ নষ্ট</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
+      <button class="btn-primary" onclick="saveTime()">সেভ</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+}
+
+window.saveTime = function(){
+  const minutes = num(document.getElementById("tMinutes").value);
+  if(!minutes){ toast("মিনিট দিতে হবে", "error"); return; }
+  state.timeLog.push({
+    id: uid(),
+    date: document.getElementById("tDate").value || today(),
+    task: document.getElementById("tTask").value,
+    minutes,
+    result: document.getElementById("tResult").value
+  });
+  save();
+  closeModal();
+  renderTime();
+  toast("✅ সেভ হয়েছে!", "success");
+};
+
+window.deleteTime = function(id){
+  if(confirm("মুছে ফেলতে চাও?")){
+    state.timeLog = state.timeLog.filter(x => x.id !== id);
+    save(); renderTime();
+  }
+};
+
+function bindTime(){
+  document.getElementById("addTimeBtn").addEventListener("click", showTimeModal);
+}
+
+/* ============================================================
+   ১৪. Quarter Overview
    ============================================================ */
 function renderOverview(){
   const q = getActiveQuarter();
@@ -1173,21 +1826,16 @@ function renderOverview(){
   const desc = document.getElementById("progressDesc");
   if(info && desc){
     if(tasks === 0){ info.textContent = "শুরু করো!"; desc.textContent = "টাস্ক ট্যাবে গিয়ে কাজ শুরু করো।"; }
-    else if(tasks < 30){ info.textContent = "শুরু হয়েছে! 🌱"; desc.textContent = bn(tasks)+"টি টাস্ক শেষ। চালিয়ে যাও!"; }
+    else if(tasks < 30){ info.textContent = "শুরু হয়েছে! 🌱"; desc.textContent = bn(tasks)+"টি টাস্ক শেষ।"; }
     else if(tasks < 60){ info.textContent = "অর্ধেক পথ! 🚀"; desc.textContent = bn(tasks)+"টি টাস্ক সম্পন্ন।"; }
     else if(tasks < 90){ info.textContent = "শেষের দিকে! 🔥"; desc.textContent = "মাত্র "+bn(90-tasks)+"টি বাকি।"; }
     else { info.textContent = "সম্পূর্ণ! 🏆"; desc.textContent = "সব টাস্ক শেষ!"; }
   }
-  const tTextEl = document.getElementById("qTargetText");
-  const tIncEl = document.getElementById("qTargetIncome");
-  const tCustEl = document.getElementById("qTargetCustomers");
-  const tProfEl = document.getElementById("qTargetProfit");
-  const stratEl = document.getElementById("qStrategy");
-  if(tTextEl) tTextEl.value = q.targetText || "";
-  if(tIncEl) tIncEl.value = q.targetIncome || "";
-  if(tCustEl) tCustEl.value = q.targetCustomers || "";
-  if(tProfEl) tProfEl.value = q.targetProfit || "";
-  if(stratEl) stratEl.value = q.strategy || "";
+  document.getElementById("qTargetText").value = q.targetText || "";
+  document.getElementById("qTargetIncome").value = q.targetIncome || "";
+  document.getElementById("qTargetCustomers").value = q.targetCustomers || "";
+  document.getElementById("qTargetProfit").value = q.targetProfit || "";
+  document.getElementById("qStrategy").value = q.strategy || "";
 }
 
 function bindOverviewInputs(){
@@ -1204,13 +1852,13 @@ function bindOverviewInputs(){
       if(!q) return;
       q[key] = e.target.value;
       save();
-      renderDashboard();
+      renderTodayDashboard();
     });
   });
 }
 
 /* ============================================================
-   ১৩. Tasks
+   ১৫. Tasks
    ============================================================ */
 function renderWeekSelect(){
   const sel = document.getElementById("weekSelect");
@@ -1224,7 +1872,7 @@ function renderWeekSelect(){
   });
 }
 
-function renderWeek(idx){
+function renderWeek2(idx){
   const q = getActiveQuarter();
   if(!q) return;
   if(idx < 0 || idx >= weekTemplates.length) idx = 0;
@@ -1246,7 +1894,7 @@ function renderWeek(idx){
     div.className = "day-item" + (done ? " done" : "");
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.id = key;
+    cb.id = "task_"+key;
     cb.checked = done;
     cb.addEventListener("change", (e) => {
       const q2 = getActiveQuarter();
@@ -1254,10 +1902,10 @@ function renderWeek(idx){
       q2.tasks[key] = e.target.checked;
       save();
       div.classList.toggle("done", e.target.checked);
-      renderDashboard(); renderOverview(); renderSummary(); updateSticky();
+      renderOverview(); renderSummary(); updateSticky(); renderTodayDashboard();
     });
     const label = document.createElement("label");
-    label.htmlFor = key;
+    label.htmlFor = "task_"+key;
     label.style.cursor = "pointer";
     label.style.flex = "1";
     label.innerHTML = `<span class="day-num">দিন ${bn(dayNum)}</span><div class="day-text">${task}</div>`;
@@ -1273,19 +1921,19 @@ function bindWeekNav(){
   const prev = document.getElementById("prevWeek");
   const next = document.getElementById("nextWeek");
   if(!sel) return;
-  sel.addEventListener("change", () => renderWeek(Number(sel.value)));
+  sel.addEventListener("change", () => renderWeek2(Number(sel.value)));
   if(prev) prev.addEventListener("click", () => {
     let v = Number(sel.value);
-    if(v > 0){ sel.value = v-1; renderWeek(v-1); }
+    if(v > 0){ sel.value = v-1; renderWeek2(v-1); }
   });
   if(next) next.addEventListener("click", () => {
     let v = Number(sel.value);
-    if(v < weekTemplates.length-1){ sel.value = v+1; renderWeek(v+1); }
+    if(v < weekTemplates.length-1){ sel.value = v+1; renderWeek2(v+1); }
   });
 }
 
 /* ============================================================
-   ১৪. Budget
+   ১৬. Budget
    ============================================================ */
 function renderBudget(){
   const q = getActiveQuarter();
@@ -1308,38 +1956,30 @@ function renderBudget(){
       const q2 = getActiveQuarter();
       if(!q2) return;
       q2.plannedBudget[i] = e.target.value;
-      save(); renderBudget(); renderDashboard();
+      save(); renderBudget();
     });
     tr.querySelector("[data-ab]").addEventListener("input", (e) => {
       const q2 = getActiveQuarter();
       if(!q2) return;
       q2.budget[i] = e.target.value;
-      save(); renderBudget(); renderDashboard();
-      renderCompareChart(currentMetric);
+      save(); renderBudget(); renderFinance(); renderCompareChart(currentMetric);
     });
     tbody.appendChild(tr);
   });
   let plannedTotal = 0, actualTotal = 0;
   budgetCategories.forEach((_, i) => {
-    const p = q.plannedBudget[i] != null ? q.plannedBudget[i] : (defaultPlanned[i] || 0);
-    const a = q.budget[i] != null ? q.budget[i] : 0;
-    plannedTotal += num(p);
-    actualTotal += num(a);
+    plannedTotal += num(q.plannedBudget[i] != null ? q.plannedBudget[i] : defaultPlanned[i]);
+    actualTotal += num(q.budget[i]);
   });
   document.getElementById("budgetTotal").textContent = "৳" + bn(actualTotal);
   const remain = plannedTotal - actualTotal;
   const remEl = document.getElementById("budgetRemain");
-  if(remain >= 0){
-    remEl.textContent = "বাকি: ৳" + bn(remain);
-    remEl.style.color = "var(--brand)";
-  } else {
-    remEl.textContent = "⚠️ " + bn(Math.abs(remain)) + " বেশি";
-    remEl.style.color = "var(--danger)";
-  }
+  if(remain >= 0){ remEl.textContent = "বাকি: ৳" + bn(remain); remEl.style.color = "var(--brand)"; }
+  else { remEl.textContent = "⚠️ " + bn(Math.abs(remain)) + " বেশি"; remEl.style.color = "var(--danger)"; }
 }
 
 /* ============================================================
-   ১৫. KPI
+   ১৭. KPI
    ============================================================ */
 function renderKPI(){
   const q = getActiveQuarter();
@@ -1365,9 +2005,8 @@ function renderKPI(){
         q2.kpi[i][inp.dataset.f] = e.target.value;
         save();
         updateKPITotals();
-        renderDashboard();
         renderKPIChart();
-        if(inp.dataset.f === "m") renderCompareChart(currentMetric);
+        if(inp.dataset.f === "m") { renderCompareChart(currentMetric); renderFinance(); }
       };
       inp.addEventListener("input", handler);
       inp.addEventListener("change", handler);
@@ -1386,14 +2025,39 @@ function updateKPITotals(){
     const k = q.kpi[i];
     if(k){ totalSold += num(k.s); totalIncome += num(k.m); }
   }
-  const soldEl = document.getElementById("kpiTotalSold");
-  const incEl = document.getElementById("kpiTotalIncome");
-  if(soldEl) soldEl.textContent = bn(totalSold);
-  if(incEl) incEl.textContent = "৳"+bn(totalIncome);
+  const s = document.getElementById("kpiTotalSold"); if(s) s.textContent = bn(totalSold);
+  const inc = document.getElementById("kpiTotalIncome"); if(inc) inc.textContent = "৳"+bn(totalIncome);
+}
+
+function renderKPIChart(){
+  const barsEl = document.getElementById("kpiChartBars");
+  const yAxisEl = document.getElementById("kpiChartYAxis");
+  if(!barsEl || !yAxisEl) return;
+  const q = getActiveQuarter();
+  if(!q) return;
+  const vals = [];
+  for(let i = 0; i < 13; i++) vals.push(q.kpi[i] ? num(q.kpi[i].m) : 0);
+  const dataMax = Math.max.apply(null, vals.concat([100]));
+  const mag = Math.pow(10, Math.floor(Math.log10(dataMax || 1)));
+  const maxV = Math.ceil(dataMax / mag) * mag || 100;
+  let yHTML = "";
+  for(let i = 4; i >= 0; i--) yHTML += '<span>৳' + bn(Math.round(maxV/4*i)) + '</span>';
+  yAxisEl.innerHTML = yHTML;
+  let barsHTML = "";
+  vals.forEach((v, i) => {
+    const pct = maxV > 0 ? (v/maxV)*100 : 0;
+    const hasValue = v > 0;
+    barsHTML += '<div class="chart-bar-wrap ' + (hasValue ? 'has-value' : '') + '">' +
+      '<div class="chart-bar-value">' + (hasValue ? '৳'+bn(v) : '') + '</div>' +
+      '<div class="chart-bar ' + (hasValue ? '' : 'empty') + '" style="height:' + Math.max(2, pct) + '%"></div>' +
+      '<div class="chart-bar-label">স' + bn(i+1) + '</div>' +
+      '<div class="chart-bar-dot"></div></div>';
+  });
+  barsEl.innerHTML = barsHTML;
 }
 
 /* ============================================================
-   ১৬. Pipeline
+   ১৮. Pipeline
    ============================================================ */
 function renderPipeline(){
   const q = getActiveQuarter();
@@ -1415,50 +2079,307 @@ function bindPipeline(){
       const action = btn.dataset.action;
       if(action === "add") q.pipeline[stage] = (q.pipeline[stage]||0) + 1;
       else q.pipeline[stage] = Math.max(0, (q.pipeline[stage]||0) - 1);
-      save(); renderPipeline(); renderDashboard();
+      save(); renderPipeline();
     });
   });
 }
 
 /* ============================================================
-   ১৭. Notes
+   ১৯. Finance (Financial Deep Dive)
    ============================================================ */
-function renderNotes(){
+function renderFinance(){
   const q = getActiveQuarter();
-  const area = document.getElementById("notesArea");
-  if(!q || !area) return;
-  area.value = q.notes || "";
-  area.style.height = "auto";
-  area.style.height = Math.max(120, area.scrollHeight) + "px";
-}
+  if(!q) return;
+  const income = qIncome(q);
+  const expense = qExpense(q);
+  const profit = income - expense;
+  const margin = income > 0 ? Math.round(profit/income*100) : 0;
+  const tasksDone = qTasksDone(q);
+  const hoursWorked = state.daily.reduce((s, d) => s + num(d.hours), 0);
+  const hourlyRate = hoursWorked > 0 ? Math.round(income / hoursWorked) : 0;
+  const paidCustomers = state.customers.filter(c => c.status === "Paid").length;
+  const cac = paidCustomers > 0 ? Math.round(expense / paidCustomers) : 0;
+  const ltv = paidCustomers > 0 ? Math.round(income / paidCustomers) : 0;
+  const ltvCac = cac > 0 ? (ltv / cac).toFixed(1) : "—";
+  const breakEven = expense > 0 && income > 0 ? Math.ceil(expense / (income / Math.max(1,paidCustomers))) : 0;
 
-function bindNotes(){
-  const area = document.getElementById("notesArea");
-  const saveBtn = document.getElementById("saveNotes");
-  const clearBtn = document.getElementById("clearNotes");
-  if(!area) return;
-  area.addEventListener("input", () => {
-    area.style.height = "auto";
-    area.style.height = Math.max(120, area.scrollHeight) + "px";
-  });
-  if(saveBtn) saveBtn.addEventListener("click", () => {
-    const q = getActiveQuarter();
-    if(!q) return;
-    q.notes = area.value;
-    save(); toast("নোট সেভ হয়েছে!", "success");
-  });
-  if(clearBtn) clearBtn.addEventListener("click", () => {
-    if(confirm("নোট মুছে ফেলতে চাও?")){
-      const q = getActiveQuarter();
-      if(!q) return;
-      area.value = ""; q.notes = ""; save();
-      toast("নোট মুছে ফেলা হয়েছে");
-    }
-  });
+  const mini = document.getElementById("financeKpiMini");
+  if(mini){
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(income)}</div>
+        <div class="kpi-mini-label">Gross Income</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(expense)}</div>
+        <div class="kpi-mini-label">Total Expense</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="color:${profit >= 0 ? 'var(--brand)' : 'var(--danger)'}">৳${bn(profit)}</div>
+        <div class="kpi-mini-label">Net Profit</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(margin)}%</div>
+        <div class="kpi-mini-label">Profit Margin</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">৳${bn(hourlyRate)}</div>
+        <div class="kpi-mini-label">Hourly Rate</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${ltvCac}:1</div>
+        <div class="kpi-mini-label">LTV:CAC</div>
+      </div>
+    `;
+  }
+
+  const tbody = document.getElementById("financeBody");
+  if(tbody){
+    const rows = [
+      ["Gross Income", "৳"+bn(income), "সব Quarter-এর মোট আয়"],
+      ["Total Expense", "৳"+bn(expense), "সব Quarter-এর মোট খরচ"],
+      ["Net Profit", "৳"+bn(profit), "আসল লাভ"],
+      ["Profit Margin", bn(margin)+"%", "আয়ের কত % লাভ"],
+      ["Hours Worked", bn(hoursWorked)+" ঘণ্টা", "Daily Tracker থেকে"],
+      ["Hourly Rate", "৳"+bn(hourlyRate), "প্রতি ঘণ্টার মূল্য"],
+      ["Paid Customers", bn(paidCustomers), "যারা টাকা দিয়েছে"],
+      ["CAC", "৳"+bn(cac), "Customer Acquisition Cost"],
+      ["LTV", "৳"+bn(ltv), "Customer Lifetime Value"],
+      ["LTV:CAC", ltvCac+":1", ltvCac >= 3 ? "✅ স্বাস্থ্যকর" : "⚠️ উন্নতি দরকার"],
+      ["Tasks Done", bn(tasksDone)+"/৯০", "Quarter-এর অগ্রগতি"]
+    ];
+    tbody.innerHTML = "";
+    rows.forEach(r => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td><strong>${r[0]}</strong></td><td style="color:var(--brand);font-weight:700">${r[1]}</td><td style="color:var(--muted);font-size:.82rem">${r[2]}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 }
 
 /* ============================================================
-   ১৮. Compare Tab
+   ২০. Goals
+   ============================================================ */
+function renderGoals(){
+  const mini = document.getElementById("goalKpiMini");
+  if(mini){
+    const total = state.goals.length;
+    const done = state.goals.filter(g => g.done).length;
+    const overdue = state.goals.filter(g => !g.done && g.deadline && g.deadline < today()).length;
+    const pct = total > 0 ? Math.round(done/total*100) : 0;
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(total)}</div>
+        <div class="kpi-mini-label">মোট লক্ষ্য</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="color:#10b981">${bn(done)}</div>
+        <div class="kpi-mini-label">সম্পন্ন</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="color:var(--danger)">${bn(overdue)}</div>
+        <div class="kpi-mini-label">সময় শেষ</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(pct)}%</div>
+        <div class="kpi-mini-label">সফলতা</div>
+      </div>
+    `;
+  }
+  const list = document.getElementById("goalList");
+  if(!list) return;
+  list.innerHTML = "";
+  if(state.goals.length === 0){
+    list.innerHTML = '<p style="text-align:center;color:var(--muted);padding:20px">কোনো লক্ষ্য নেই</p>';
+    return;
+  }
+  state.goals.forEach(g => {
+    const overdue = !g.done && g.deadline && g.deadline < today();
+    const div = document.createElement("div");
+    div.className = "goal-card";
+    div.innerHTML = `
+      <div class="goal-status ${g.done ? 'done' : ''}" onclick="toggleGoal('${g.id}')">${g.done ? '✓' : ''}</div>
+      <div>
+        <div class="goal-title" style="${g.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${g.title}</div>
+        <div class="goal-meta">${g.category || ""} ${g.target ? "· Target: " + bn(g.target) : ""}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${g.deadline ? `<span class="goal-deadline ${overdue ? 'overdue' : ''}">${formatDate(g.deadline)}</span>` : ""}
+        <button class="btn-del" onclick="deleteGoal('${g.id}')">🗑️</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function showGoalModal(){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  content.innerHTML = `
+    <h3>➕ নতুন লক্ষ্য</h3>
+    <div class="info-field">
+      <label>লক্ষ্য *</label>
+      <input type="text" id="gTitle" placeholder="যেমন: ৫ জন পেইড কাস্টমার">
+    </div>
+    <div class="info-field">
+      <label>Target (সংখ্যা)</label>
+      <input type="number" id="gTarget" placeholder="৫">
+    </div>
+    <div class="info-field">
+      <label>Deadline</label>
+      <input type="date" id="gDeadline">
+    </div>
+    <div class="info-field">
+      <label>Category</label>
+      <select id="gCategory">
+        <option value="💰 আয়">💰 আয়</option>
+        <option value="👥 কাস্টমার">👥 কাস্টমার</option>
+        <option value="📚 শেখা">📚 শেখা</option>
+        <option value="🔥 অভ্যাস">🔥 অভ্যাস</option>
+        <option value="📌 অন্যান্য">📌 অন্যান্য</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
+      <button class="btn-primary" onclick="saveGoal()">সেভ</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+}
+
+window.saveGoal = function(){
+  const title = document.getElementById("gTitle").value.trim();
+  if(!title){ toast("লক্ষ্য লিখতে হবে", "error"); return; }
+  state.goals.push({
+    id: uid(),
+    title,
+    target: document.getElementById("gTarget").value,
+    deadline: document.getElementById("gDeadline").value,
+    category: document.getElementById("gCategory").value,
+    done: false
+  });
+  save(); closeModal(); renderGoals();
+  toast("✅ লক্ষ্য যোগ হয়েছে!", "success");
+};
+
+window.toggleGoal = function(id){
+  const g = state.goals.find(x => x.id === id);
+  if(g){ g.done = !g.done; save(); renderGoals(); }
+};
+
+window.deleteGoal = function(id){
+  if(confirm("লক্ষ্য মুছে ফেলতে চাও?")){
+    state.goals = state.goals.filter(x => x.id !== id);
+    save(); renderGoals();
+  }
+};
+
+function bindGoals(){
+  document.getElementById("addGoalBtn").addEventListener("click", showGoalModal);
+}
+
+/* ============================================================
+   ২১. Habits
+   ============================================================ */
+function renderHabits(){
+  const mini = document.getElementById("habitKpiMini");
+  const todayStr = today();
+  if(mini){
+    let bestStreak = 0, bestName = "—";
+    Object.keys(state.habits).forEach(name => {
+      let streak = 0;
+      const d = new Date();
+      while(true){
+        const k = d.toISOString().slice(0,10);
+        if(state.habits[name][k]){ streak++; d.setDate(d.getDate() - 1); }
+        else break;
+        if(streak > 100) break;
+      }
+      if(streak > bestStreak){ bestStreak = streak; bestName = name; }
+    });
+    const todayDone = Object.keys(state.habits).filter(n => state.habits[n][todayStr]).length;
+    const total = Object.keys(state.habits).length;
+    mini.innerHTML = `
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">${bn(todayDone)}/${bn(total)}</div>
+        <div class="kpi-mini-label">আজ সম্পন্ন</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value">🔥 ${bn(bestStreak)}</div>
+        <div class="kpi-mini-label">সেরা স্ট্রিক</div>
+      </div>
+      <div class="kpi-mini-card">
+        <div class="kpi-mini-value" style="font-size:.85rem">${bestName}</div>
+        <div class="kpi-mini-label">সেরা অভ্যাস</div>
+      </div>
+    `;
+  }
+  const grid = document.getElementById("habitGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+  // হেডার সারি
+  const header = document.createElement("div");
+  header.className = "habit-row";
+  header.innerHTML = '<div class="habit-name" style="font-weight:700;color:var(--muted)">অভ্যাস</div>' + weekDays.map(d => `<div style="text-align:center;font-size:.72rem;color:var(--muted);font-weight:700">${d}</div>`).join("");
+  grid.appendChild(header);
+  // শেষ ৭ দিন
+  const last7 = [];
+  for(let i = 6; i >= 0; i--){
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    last7.push(d.toISOString().slice(0,10));
+  }
+  Object.keys(state.habits).forEach(name => {
+    const row = document.createElement("div");
+    row.className = "habit-row";
+    let rowHTML = `<div class="habit-name">${name}</div>`;
+    last7.forEach(dateStr => {
+      const done = !!state.habits[name][dateStr];
+      rowHTML += `<div class="habit-day ${done ? 'done' : ''}" onclick="toggleHabit('${name}','${dateStr}')">${done ? '✓' : ''}</div>`;
+    });
+    row.innerHTML = rowHTML;
+    grid.appendChild(row);
+  });
+}
+
+window.toggleHabit = function(name, dateStr){
+  if(!state.habits[name]) state.habits[name] = {};
+  state.habits[name][dateStr] = !state.habits[name][dateStr];
+  save(); renderHabits();
+};
+
+function showHabitModal(){
+  const overlay = document.getElementById("modalOverlay");
+  const content = document.getElementById("modalContent");
+  content.innerHTML = `
+    <h3>➕ নতুন অভ্যাস</h3>
+    <div class="info-field">
+      <label>অভ্যাসের নাম</label>
+      <input type="text" id="hName" placeholder="যেমন: 🏃 ১০ মিনিট হাঁটা">
+    </div>
+    <div class="modal-buttons">
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
+      <button class="btn-primary" onclick="saveHabit()">সেভ</button>
+    </div>
+  `;
+  overlay.classList.add("show");
+}
+
+window.saveHabit = function(){
+  const name = document.getElementById("hName").value.trim();
+  if(!name){ toast("নাম দিতে হবে", "error"); return; }
+  if(state.habits[name]){ toast("এই অভ্যাস আগেই আছে", "error"); return; }
+  state.habits[name] = {};
+  save(); closeModal(); renderHabits();
+  toast("✅ অভ্যাস যোগ হয়েছে!", "success");
+};
+
+function bindHabits(){
+  document.getElementById("addHabitBtn").addEventListener("click", showHabitModal);
+}
+
+/* ============================================================
+   ২২. Compare + Summary + Growth
    ============================================================ */
 let currentMetric = "income";
 
@@ -1470,6 +2391,41 @@ function bindMetricSwitch(){
       currentMetric = btn.dataset.metric;
       renderCompareChart(currentMetric);
     });
+  });
+}
+
+function renderCompareChart(metric){
+  const container = document.getElementById("compareChart");
+  if(!container) return;
+  container.innerHTML = "";
+  if(state.quarters.length === 0) return;
+  const values = state.quarters.map(q => {
+    switch(metric){
+      case "income": return qIncome(q);
+      case "profit": return qProfit(q);
+      case "customers": return qCustomers(q);
+      case "expense": return qExpense(q);
+      case "tasks": return qTasksDone(q);
+      default: return 0;
+    }
+  });
+  const maxV = Math.max.apply(null, values.concat([1]));
+  const unit = (metric === "customers" || metric === "tasks") ? "" : "৳";
+  const activeIdx = state.quarters.findIndex(q => q.id === state.activeQId);
+  state.quarters.forEach((q, i) => {
+    const v = values[i];
+    const pct = (v / maxV) * 100;
+    const isActive = i === activeIdx;
+    const isEmpty = v === 0;
+    const bar = document.createElement("div");
+    bar.className = "cc-bar" + (isActive ? " active" : "") + (isEmpty ? " empty" : "");
+    bar.innerHTML = `
+      <div class="cc-value ${v > 0 ? 'show' : ''}">${v > 0 ? unit + bn(v) : ''}</div>
+      <div class="cc-bar-fill" style="height:${Math.max(2, pct)}%"></div>
+      <div class="cc-label">${q.name.replace('Quarter ', 'Q')}</div>
+    `;
+    bar.addEventListener("click", () => switchQuarter(q.id));
+    container.appendChild(bar);
   });
 }
 
@@ -1501,9 +2457,6 @@ function renderCompareTable(){
   });
 }
 
-/* ============================================================
-   ১৯. Summary
-   ============================================================ */
 function renderSummary(){
   const dash = document.getElementById("summaryDashboard");
   if(!dash) return;
@@ -1515,7 +2468,6 @@ function renderSummary(){
     totalTasks += qTasksDone(q);
   });
   const totalProfit = totalIncome - totalExpense;
-  const totalTasksPossible = state.quarters.length * 90;
   dash.innerHTML = `
     <div class="dash-card green">
       <div class="dash-icon">💰</div>
@@ -1538,17 +2490,16 @@ function renderSummary(){
     <div class="dash-card purple">
       <div class="dash-icon">👥</div>
       <div class="dash-value">${bn(totalSold)}</div>
-      <div class="dash-label">মোট পেইড কাস্টমার</div>
-      <div class="dash-sub">${bn(state.quarters.length)} Quarter-এ</div>
+      <div class="dash-label">পেইড কাস্টমার</div>
+      <div class="dash-sub">সব Quarter</div>
     </div>
     <div class="dash-card green">
       <div class="dash-icon">✅</div>
       <div class="dash-value">${bn(totalTasks)}</div>
-      <div class="dash-label">মোট টাস্ক সম্পন্ন</div>
-      <div class="dash-sub">${totalTasksPossible > 0 ? bn(Math.round(totalTasks/totalTasksPossible*100))+'%' : '০%'}</div>
+      <div class="dash-label">টাস্ক সম্পন্ন</div>
+      <div class="dash-sub">${bn(Math.round(totalTasks/(state.quarters.length*90)*100))}%</div>
     </div>
   `;
-
   const tbody = document.getElementById("growthTableBody");
   if(!tbody) return;
   tbody.innerHTML = "";
@@ -1558,15 +2509,11 @@ function renderSummary(){
     const cust = qCustomers(q);
     let changeHTML = "—";
     if(i > 0){
-      const prev = state.quarters[i-1];
-      const prevIncome = qIncome(prev);
+      const prevIncome = qIncome(state.quarters[i-1]);
       if(prevIncome > 0){
         const pct = Math.round((income - prevIncome) / prevIncome * 100);
         const cls = pct > 0 ? "up" : pct < 0 ? "down" : "neutral";
-        const sign = pct > 0 ? "+" : "";
-        changeHTML = `<span class="growth-badge ${cls}">${sign}${bn(pct)}%</span>`;
-      } else if(income > 0){
-        changeHTML = `<span class="growth-badge up">নতুন</span>`;
+        changeHTML = `<span class="growth-badge ${cls}">${pct > 0 ? '+' : ''}${bn(pct)}%</span>`;
       }
     }
     const tr = document.createElement("tr");
@@ -1582,29 +2529,69 @@ function renderSummary(){
 }
 
 /* ============================================================
-   ২০. Quarter Switch
+   ২৩. Quarter UI
    ============================================================ */
+function renderQuarterSelect(){
+  const sel = document.getElementById("quarterSelect");
+  if(!sel) return;
+  sel.innerHTML = "";
+  state.quarters.forEach(q => {
+    const o = document.createElement("option");
+    o.value = q.id;
+    o.textContent = `${q.name} (${formatDate(q.startDate)} → ${formatDate(q.endDate)})`;
+    if(q.id === state.activeQId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+
+function renderQuarterStatus(){
+  const q = getActiveQuarter();
+  const el = document.getElementById("qStatus");
+  if(!q || !el){ if(el) el.textContent = "—"; return; }
+  const start = new Date(q.startDate);
+  const now = new Date();
+  const diff = Math.floor((now - start) / (1000*60*60*24));
+  const remain = Math.max(0, 90 - diff);
+  if(diff < 0) el.textContent = `🔵 শুরু হবে ${formatDate(q.startDate)}-এ`;
+  else if(diff >= 90) el.textContent = `🔴 সম্পন্ন`;
+  else el.textContent = `🟢 দিন ${bn(diff+1)}/৯০ · বাকি ${bn(remain)} দিন`;
+}
+
 function switchQuarter(id){
   state.activeQId = id;
   save();
-  renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+  renderAllQuarterData();
   toast("Quarter পরিবর্তন হয়েছে");
 }
 
 function renderAllQuarterData(){
-  renderDashboard(); renderOverview(); renderWeek(0); renderBudget();
-  renderKPI(); renderPipeline(); renderNotes(); renderCompareChart(currentMetric);
-  renderCompareTable(); renderSummary(); updateSticky();
+  renderQuarterSelect(); renderQuarterStatus();
+  renderOverview(); renderWeek2(0); renderBudget(); renderKPI();
+  renderPipeline(); renderTodayDashboard(); renderFinance();
+  renderCompareChart(currentMetric); renderCompareTable(); renderSummary();
+  updateSticky();
+}
+
+function updateSticky(){
+  const q = getActiveQuarter();
+  if(!q) return;
+  const tasks = qTasksDone(q);
+  const pct = Math.round(tasks/90*100);
+  const t = document.getElementById("stickyText"); if(t) t.textContent = bn(tasks)+"/৯০ দিন";
+  const f = document.getElementById("stickyFill"); if(f) f.style.width = pct+"%";
+  const n = document.getElementById("stickyQuarter"); if(n) n.textContent = q.name;
 }
 
 /* ============================================================
-   ২১. Modal — নতুন Quarter
+   ২৪. Modal helpers
    ============================================================ */
+window.closeModal = function(){
+  document.getElementById("modalOverlay").classList.remove("show");
+};
+
 function showNewQuarterModal(){
   const overlay = document.getElementById("modalOverlay");
   const content = document.getElementById("modalContent");
-  if(!overlay || !content) return;
-
   const lastQ = state.quarters[state.quarters.length - 1];
   let suggestedStart = today();
   if(lastQ){
@@ -1612,12 +2599,8 @@ function showNewQuarterModal(){
     const dayAfter = new Date(lastEnd.getTime() + 24*60*60*1000);
     suggestedStart = dayAfter.toISOString().slice(0,10);
   }
-
   content.innerHTML = `
     <h3>➕ নতুন Quarter শুরু করো</h3>
-    <p style="font-size:.85rem;color:var(--muted);margin-bottom:14px">
-      ${lastQ ? 'আগের Quarter শেষ হয়েছে ' + formatDate(lastQ.endDate) + '-এ।' : 'এটি তোমার প্রথম Quarter।'}
-    </p>
     <div class="info-field">
       <label>Quarter-এর নাম</label>
       <input type="text" id="newQName" value="Quarter ${state.quarters.length+1}">
@@ -1627,41 +2610,38 @@ function showNewQuarterModal(){
       <input type="date" id="newQStart" value="${suggestedStart}">
     </div>
     <div class="info-field">
-      <label>Target (অটো প্রস্তাব — পরে এডিট করতে পারবে)</label>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
-        <input type="number" id="newQTargetIncome" placeholder="আয় ৳" value="${lastQ ? Math.round(qIncome(lastQ)*1.2) : 3000}">
-        <input type="number" id="newQTargetCustomers" placeholder="কাস্টমার" value="${lastQ ? Math.max(1, Math.round(qSold(lastQ)*1.2)) : 3}">
-      </div>
+      <label>Target Income (৳)</label>
+      <input type="number" id="newQTargetIncome" value="${lastQ ? Math.round(qIncome(lastQ)*1.2) : 3000}">
+    </div>
+    <div class="info-field">
+      <label>Target Customers</label>
+      <input type="number" id="newQTargetCustomers" value="${lastQ ? Math.max(1, Math.round(qSold(lastQ)*1.2)) : 3}">
     </div>
     <div class="modal-buttons">
-      <button class="btn-secondary" id="cancelNewQ">বাতিল</button>
+      <button class="btn-secondary" onclick="closeModal()">বাতিল</button>
       <button class="btn-primary" id="confirmNewQ">তৈরি করো</button>
     </div>
   `;
   overlay.classList.add("show");
-
-  document.getElementById("cancelNewQ").onclick = () => overlay.classList.remove("show");
   document.getElementById("confirmNewQ").onclick = () => {
     const name = document.getElementById("newQName").value.trim() || "Quarter " + (state.quarters.length+1);
     const start = document.getElementById("newQStart").value || today();
     const q = createQuarter(start, name);
-    const targetIncome = document.getElementById("newQTargetIncome").value;
-    const targetCustomers = document.getElementById("newQTargetCustomers").value;
-    if(targetIncome) q.targetIncome = targetIncome;
-    if(targetCustomers) q.targetCustomers = targetCustomers;
+    q.targetIncome = document.getElementById("newQTargetIncome").value;
+    q.targetCustomers = document.getElementById("newQTargetCustomers").value;
     q.targetProfit = q.targetIncome ? String(Math.round(num(q.targetIncome) * 0.5)) : "";
     save();
-    overlay.classList.remove("show");
+    closeModal();
     document.getElementById("emptyState").style.display = "none";
     document.getElementById("mainApp").style.display = "block";
     document.getElementById("stickyBottom").style.display = "flex";
-    renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+    renderAllQuarterData();
     toast("✅ " + q.name + " তৈরি হয়েছে!", "success");
   };
 }
 
 /* ============================================================
-   ২২. Settings Modal
+   ২৫. Settings
    ============================================================ */
 function openSettings(){
   document.getElementById("syncUrlInput").value = syncUrl;
@@ -1682,25 +2662,16 @@ function bindSettings(){
 
   if(settingsBtn) settingsBtn.addEventListener("click", openSettings);
   if(closeBtn) closeBtn.addEventListener("click", () => overlay.classList.remove("show"));
-  if(overlay) overlay.addEventListener("click", (e) => {
-    if(e.target === overlay) overlay.classList.remove("show");
-  });
+  if(overlay) overlay.addEventListener("click", (e) => { if(e.target === overlay) overlay.classList.remove("show"); });
 
   if(saveBtn) saveBtn.addEventListener("click", () => {
     const url = document.getElementById("syncUrlInput").value.trim();
-    if(url && !url.startsWith("https://script.google.com/")){
-      toast("⚠️ সঠিক Google Apps Script URL দাও", "error");
-      return;
-    }
+    if(url && !url.startsWith("https://script.google.com/")){ toast("⚠️ সঠিক URL দাও", "error"); return; }
     syncUrl = url;
     localStorage.setItem(SYNC_URL_KEY, syncUrl);
     toast("✅ URL সেভ হয়েছে!", "success");
     updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
-    if(syncUrl && autoSyncEnabled){
-      startPeriodicSync();
-      // ⭐ URL সেভ করার পরপরই প্রথম Sync
-      setTimeout(() => syncToSheet(true), 500);
-    }
+    if(syncUrl && autoSyncEnabled){ startPeriodicSync(); setTimeout(() => syncToSheet(true), 500); }
   });
 
   if(testBtn) testBtn.addEventListener("click", testConnection);
@@ -1713,18 +2684,18 @@ function bindSettings(){
     localStorage.setItem(AUTO_SYNC_KEY, autoSyncEnabled);
     if(autoSyncEnabled && syncUrl){
       startPeriodicSync();
-      toast("✅ Auto-sync চালু — এখনই Sync হচ্ছে...", "success");
+      toast("✅ Auto-sync চালু", "success");
       setTimeout(() => syncToSheet(true), 300);
     } else {
       if(periodicSyncTimer) clearInterval(periodicSyncTimer);
       periodicSyncTimer = null;
-      toast(autoSyncEnabled ? "✅ Auto-sync চালু" : "⏸️ Auto-sync বন্ধ");
+      toast(autoSyncEnabled ? "✅ চালু" : "⏸️ বন্ধ");
     }
   });
 }
 
 /* ============================================================
-   ২৩. Tabs
+   ২৬. Tabs + Theme + Actions
    ============================================================ */
 function initTabs(){
   document.querySelectorAll(".tab").forEach(tab => {
@@ -1734,16 +2705,23 @@ function initTabs(){
       tab.classList.add("active");
       const target = document.getElementById("tab-" + tab.dataset.tab);
       if(target) target.classList.add("active");
-      if(tab.dataset.tab === "kpi") renderKPIChart();
-      if(tab.dataset.tab === "compare") renderCompareChart(currentMetric);
-      if(tab.dataset.tab === "summary") renderSummary();
+      // Tab-specific render
+      const t = tab.dataset.tab;
+      if(t === "today"){ renderToday(); renderTodayDashboard(); }
+      if(t === "week") renderWeek();
+      if(t === "customers") renderCustomers();
+      if(t === "expenses") renderExpenses();
+      if(t === "time") renderTime();
+      if(t === "kpi") renderKPIChart();
+      if(t === "compare") renderCompareChart(currentMetric);
+      if(t === "summary") renderSummary();
+      if(t === "finance") renderFinance();
+      if(t === "goals") renderGoals();
+      if(t === "habits") renderHabits();
     });
   });
 }
 
-/* ============================================================
-   ২৪. Theme
-   ============================================================ */
 function applyTheme(){
   document.documentElement.setAttribute("data-theme", state.theme);
   const btn = document.getElementById("themeToggle");
@@ -1760,9 +2738,6 @@ function initTheme(){
   });
 }
 
-/* ============================================================
-   ২৫. Actions
-   ============================================================ */
 function initActions(){
   const exp = document.getElementById("exportBtn");
   const imp = document.getElementById("importBtn");
@@ -1779,10 +2754,10 @@ function initActions(){
     const blob = new Blob([JSON.stringify(state, null, 2)], {type: "application/json"});
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "business_backup_" + today() + ".json";
+    a.download = "business_full_backup_" + today() + ".json";
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast("ব্যাকআপ ডাউনলোড হয়েছে!", "success");
+    toast("ব্যাকআপ ডাউনলোড!", "success");
   });
 
   if(imp && inp){
@@ -1796,7 +2771,7 @@ function initActions(){
           const data = JSON.parse(ev.target.result);
           state = Object.assign(defaultState(), data);
           localStorage.setItem(STORE, JSON.stringify(state));
-          toast("ডেটা রিস্টোর হয়েছে!", "success");
+          toast("✅ রিস্টোর হয়েছে!", "success");
           setTimeout(() => location.reload(), 600);
         }catch(err){ toast("ভুল ফাইল!", "error"); }
       };
@@ -1805,30 +2780,13 @@ function initActions(){
   }
 
   if(rst) rst.addEventListener("click", () => {
-    if(confirm("সব Quarter ও ডেটা মুছে ফেলতে চাও? এটি ফিরিয়ে আনা যাবে না।")){
+    if(confirm("সব ডেটা মুছে ফেলতে চাও? ফিরিয়ে আনা যাবে না।")){
       localStorage.removeItem(STORE);
       location.reload();
     }
   });
 
   if(prt) prt.addEventListener("click", () => window.print());
-}
-
-/* ============================================================
-   ২৬. Sticky Bottom
-   ============================================================ */
-function updateSticky(){
-  const q = getActiveQuarter();
-  const el = document.getElementById("stickyBottom");
-  const text = document.getElementById("stickyText");
-  const fill = document.getElementById("stickyFill");
-  const qName = document.getElementById("stickyQuarter");
-  if(!q || !el) return;
-  const tasks = qTasksDone(q);
-  const pct = Math.round(tasks/90*100);
-  if(text) text.textContent = bn(tasks)+"/৯০ দিন";
-  if(fill) fill.style.width = pct+"%";
-  if(qName) qName.textContent = q.name;
 }
 
 /* ============================================================
@@ -1843,9 +2801,15 @@ function init(){
   bindWeekNav();
   bindOverviewInputs();
   bindPipeline();
-  bindNotes();
   bindMetricSwitch();
-  
+  bindToday();
+  bindWeek();
+  bindCustomers();
+  bindExpenses();
+  bindTime();
+  bindGoals();
+  bindHabits();
+
   const sel = document.getElementById("quarterSelect");
   if(sel) sel.addEventListener("change", () => switchQuarter(sel.value));
 
@@ -1855,27 +2819,14 @@ function init(){
   if(emptyNewQ) emptyNewQ.addEventListener("click", showNewQuarterModal);
 
   renderWeekSelect();
+  if(syncUrl) updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
+  else updateSyncStatus("idle");
 
-  // Sync status
-  if(syncUrl){
-    updateSyncStatus(lastSyncTime ? "success" : "idle", lastSyncTime);
-  } else {
-    updateSyncStatus("idle");
-  }
-  
-  // Auto Sync চালু
   if(autoSyncEnabled && syncUrl){
     startPeriodicSync();
-    // ⭐ HTML খোলার ৩ সেকেন্ড পরে প্রথম Sync
-    if(state.quarters.length > 0){
-      setTimeout(() => {
-        console.log("[Auto-sync] On page load");
-        syncToSheet(false);
-      }, 3000);
-    }
+    if(state.quarters.length > 0) setTimeout(() => syncToSheet(false), 3000);
   }
 
-  // Quarter থাকলে UI দেখাও
   if(state.quarters.length === 0){
     document.getElementById("emptyState").style.display = "block";
     document.getElementById("mainApp").style.display = "none";
@@ -1892,11 +2843,17 @@ function init(){
   document.getElementById("mainApp").style.display = "block";
   document.getElementById("stickyBottom").style.display = "flex";
 
-  renderQuarterSelect(); renderQuarterStatus(); renderAllQuarterData();
+  renderAllQuarterData();
+  renderToday();
+  renderWeek();
+  renderCustomers();
+  renderExpenses();
+  renderTime();
+  renderGoals();
+  renderHabits();
 
   setInterval(() => { renderQuarterStatus(); updateSticky(); }, 60000);
-  
-  // Page close হওয়ার আগে auto-save চেষ্টা
+
   window.addEventListener("beforeunload", () => {
     if(syncUrl && autoSyncEnabled){
       try{
