@@ -457,7 +457,7 @@ body{background:#fff;padding:0}
 <option value="available">✅ Stock আছে</option>
 </select>
 <input type="text" id="invSearch" placeholder="🔍 প্রোডাক্ট খুঁজো...">
-<button class="btn-add" id="addProductBtn" style="margin:0">➕ নতুন প্রোডাক্ট</button>
+<button class="btn-add" id="addProductBtn" style="margin:0">➕ নতুন প্রোডাক্ট</button> <button class="btn-add" id="shopToInvBtn" style="margin:0;background:var(--blue)">🛍️ Shop থেকে Inventory বানাও</button>
 </div>
 <div class="product-grid" id="productGrid"></div>
 </div>
@@ -495,9 +495,9 @@ body{background:#fff;padding:0}
 <div class="card">
 <h2>🛒 Orders</h2>
 <div class="kpi-mini" id="ordersKpiMini"></div>
-<button class="btn-add" id="addOrderBtn">➕ নতুন Order</button>
+<button class="btn-add" id="addOrderBtn">➕ নতুন Order</button> <button class="btn-add" id="importShopBtn" style="background:var(--blue)">🛍️ Shop থেকে অর্ডার আনো</button>
 <div style="overflow-x:auto"><table class="data-table">
-<thead><tr><th>তারিখ</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th>Qty</th><th>Total</th><th>Payment</th><th>Delivery</th><th></th></tr></thead>
+<thead><tr><th>তারিখ</th><th>কাস্টমার</th><th>প্রোডাক্ট</th><th>Qty</th><th>Total</th><th>লাভ</th><th>Payment</th><th>Delivery</th><th></th></tr></thead>
 <tbody id="ordersBody"></tbody>
 </table></div>
 </div>
@@ -827,6 +827,10 @@ body{background:#fff;padding:0}
 <button class="btn-sync-save" id="saveSyncUrl">💾 Save</button>
 <button class="btn-sync-test" id="testSyncUrl">🔍 Test</button>
 </div>
+<div class="info-field" style="margin-top:10px"><label>Dashboard পাসওয়ার্ড (AppScript-এর ADMIN_PASSWORD)</label><input type="password" class="sync-url-input" id="syncPwInput" autocomplete="off"></div>
+<div class="info-field" style="margin-top:10px"><label>Shop API URL (দোকানের Apps Script)</label><input type="text" class="sync-url-input" id="shopUrlInput"></div>
+<div class="info-field" style="margin-top:10px"><label>Shop অ্যাডমিন পাসওয়ার্ড</label><input type="password" class="sync-url-input" id="shopPwInput" autocomplete="off"></div>
+<div class="sync-buttons"><button class="btn-sync-save" id="saveShopCfg">💾 পাসওয়ার্ড ও Shop সেভ</button></div>
 <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
 <h4>📤 Sync Actions</h4>
 <div class="sync-buttons">
@@ -1174,12 +1178,7 @@ async function syncToSheet(showMsg){
   updateSyncStatus("syncing");
   if (showMsg !== false) toast("☁️ সেভ হচ্ছে...");
   try {
-    const payload = encodeURIComponent(JSON.stringify(state));
-    const url = syncUrl + "?action=save&data=" + payload;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(url, { method: "GET", signal: controller.signal });
-    clearTimeout(timeoutId);
+    const response = await sheetPostRaw({ action: "save", data: state });
     if (!response.ok) throw new Error("HTTP " + response.status);
     const result = await response.json();
     if (result.ok){
@@ -1206,11 +1205,7 @@ async function loadFromSheet(){
   if (!confirm("Google Sheet থেকে লোড করলে বর্তমান ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
   toast("⬇️ লোড হচ্ছে...");
   try {
-    const url = syncUrl + "?action=load&_t=" + Date.now();
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(url, { signal: controller.signal });
-    clearTimeout(timeoutId);
+    const response = await sheetPostRaw({ action: "load" });
     const result = await response.json();
     if (result.ok && result.data){
       state = Object.assign(defaultState(), result.data);
@@ -1231,7 +1226,7 @@ async function testConnection(){
   if (!syncUrl){ toast("⚠️ আগে URL সেভ করো", "error"); return; }
   toast("🔍 Testing...");
   try {
-    const response = await fetch(syncUrl + "?action=ping&_t=" + Date.now());
+    const response = await sheetPostRaw({ action: "ping" });
     const result = await response.json();
     if (result.ok) toast("✅ সংযোগ কাজ করছে! " + (result.version || ""), "success");
     else toast("❌ সার্ভার সমস্যা", "error");
@@ -1244,7 +1239,7 @@ async function clearSheet(){
   if (!syncUrl){ toast("⚠️ আগে URL দাও", "error"); return; }
   if (!confirm("⚠️ Sheet-এর সব ডেটা মুছে যাবে। চালিয়ে যাব?")) return;
   try {
-    const response = await fetch(syncUrl + "?action=clear&_t=" + Date.now());
+    const response = await sheetPostRaw({ action: "clear" });
     const result = await response.json();
     if (result.ok) toast("🗑️ Clear হয়েছে", "success");
     else toast("❌ Clear ব্যর্থ", "error");
@@ -1999,6 +1994,7 @@ function renderKPI(){
         if (!q2) return;
         q2.kpi[i] = q2.kpi[i] || {};
         q2.kpi[i][inp.dataset.f] = e.target.value;
+        if (inp.dataset.f === "s" || inp.dataset.f === "m") q2.kpi[i].auto = false;
         save();
         updateKPITotals();
         renderKPIChart();
@@ -2067,7 +2063,7 @@ function renderPipeline(){
   const map = {new:"pipeNew", contact:"pipeContact", offer:"pipeOffer", sold:"pipeSold"};
   for (const k in map){
     const el = document.getElementById(map[k]);
-    if (el) el.textContent = bn(p[k] || 0);
+    if (el) el.textContent = bn((p[k] || 0) + (k === "sold" ? num(q.shopSold) : 0));
   }
 }
 
@@ -2534,6 +2530,7 @@ function showNewQuarterModal(){
 function openSettings(){
   document.getElementById("syncUrlInput").value = syncUrl;
   document.getElementById("autoSyncToggle").checked = autoSyncEnabled;
+  fillShopCfg();
   document.getElementById("settingsOverlay").classList.add("show");
 }
 
@@ -2731,7 +2728,7 @@ function renderInventory(){
       </div>
       <div class="product-info">
         <div class="product-name">${escapeHtml(p.name) || "Unnamed"}</div>
-        <div class="product-sku">${escapeHtml(p.sku) || "—"} · ${escapeHtml(p.category) || "—"}</div>
+        <div class="product-sku">${escapeHtml(p.sku) || "—"} · ${escapeHtml(p.category) || "—"}${p.shopId ? " · 🔗" : ""}</div>
         <div class="product-price">
           <span class="product-buy">৳${bn(buy)}</span>
           <span class="product-sell">৳${bn(sell)}</span>
@@ -2771,6 +2768,8 @@ function showProductModal(product){
       <div class="info-field"><label>বিক্রয় মূল্য (৳)</label><input type="number" id="pSellPrice" value="${escapeAttr(p.sellPrice)}"></div>
       <div class="info-field"><label>Stock</label><input type="number" id="pStock" value="${escapeAttr(p.stock)}"></div>
       <div class="info-field"><label>Supplier</label><input type="text" id="pSupplier" value="${escapeAttr(p.supplier)}"></div>
+      ${(() => { const l = shopProdsCache(), cur = String(p.shopId || "");
+        return `<div class="info-field" style="grid-column:1/-1"><label>🔗 Shop প্রোডাক্ট (জোড়া লাগাও)</label><select id="pShopId"><option value="">— জোড়া নেই —</option>${cur && !l.some(s => String(s.id) === cur) ? `<option value="${escapeAttr(cur)}" selected>(জোড়া আছে: ${escapeHtml(cur)})</option>` : ""}${l.map(s => `<option value="${escapeAttr(s.id)}" ${String(s.id) === cur ? "selected" : ""}>${escapeHtml(s.name)}</option>`).join("")}</select></div>`; })()}
       <div class="info-field"><label>Size</label><input type="text" id="pSize" value="${escapeAttr(p.size)}"></div>
       <div class="info-field"><label>Weight</label><input type="text" id="pWeight" value="${escapeAttr(p.weight)}"></div>
       <div class="info-field"><label>Material</label><input type="text" id="pMaterial" value="${escapeAttr(p.material)}"></div>
@@ -2800,11 +2799,12 @@ window.saveProduct = function(id){
     weight: document.getElementById("pWeight").value,
     material: document.getElementById("pMaterial").value,
     imageUrl: document.getElementById("pImageUrl").value,
-    notes: document.getElementById("pNotes").value
+    notes: document.getElementById("pNotes").value,
+    shopId: document.getElementById("pShopId") ? document.getElementById("pShopId").value : ""
   };
   if (id){
     const idx = state.products.findIndex(x => x.id === id);
-    if (idx >= 0) Object.assign(state.products[idx], data);
+    if (idx >= 0){ const pr = state.products[idx], oldPrice = num(pr.sellPrice); Object.assign(pr, data); pushShopPrice(pr, oldPrice); }
   } else {
     state.products.push(Object.assign({ id: uid(), sold: 0, photos: [], addedDate: today() }, data));
   }
@@ -2916,6 +2916,7 @@ window.confirmQuickSell = function(productId){
     category: p.category,
     quantity: qty,
     unitPrice: unitPrice,
+    buyPrice: num(p.buyPrice),
     total: total,
     paymentStatus: paymentStatus,
     paymentMethod: paymentMethod,
@@ -3184,6 +3185,15 @@ window.setPrimaryPhoto = function(productId, idx){
 /* ============================================================
    ORDERS
    ============================================================ */
+function orderBuy(o){
+  if (o.buyPrice !== undefined && o.buyPrice !== null && num(o.buyPrice) > 0) return num(o.buyPrice);
+  const p = state.products.find(x => x.id === o.productId);
+  return p && num(p.buyPrice) > 0 ? num(p.buyPrice) : null;
+}
+function orderProfit(o){
+  const b = orderBuy(o);
+  return b === null ? null : num(o.total) - b * num(o.quantity);
+}
 function renderOrders(){
   const mini = document.getElementById("ordersKpiMini");
   const tbody = document.getElementById("ordersBody");
@@ -3196,6 +3206,8 @@ function renderOrders(){
     const due = state.orders.filter(o => o.paymentStatus === "Due").reduce((s, o) => s + num(o.total), 0);
     const partial = state.orders.filter(o => o.paymentStatus === "Partial").reduce((s, o) => s + num(o.total), 0);
     const pending = state.orders.filter(o => o.deliveryStatus === "Pending").length;
+    const totalProfit = state.orders.reduce((s, o) => s + (orderProfit(o) || 0), 0);
+    const noBuyCount = state.orders.filter(o => orderProfit(o) === null).length;
     mini.innerHTML = `
       <div class="kpi-mini-card"><div class="kpi-mini-value">${bn(totalOrders)}</div><div class="kpi-mini-label">Orders</div></div>
       <div class="kpi-mini-card"><div class="kpi-mini-value">৳${bn(totalRevenue)}</div><div class="kpi-mini-label">Revenue</div></div>
@@ -3203,12 +3215,15 @@ function renderOrders(){
       <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:var(--accent)">৳${bn(partial)}</div><div class="kpi-mini-label">⏳ Partial</div></div>
       <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:var(--danger)">৳${bn(due)}</div><div class="kpi-mini-label">🔴 Due</div></div>
       <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:var(--accent)">${bn(pending)}</div><div class="kpi-mini-label">🚚 Pending</div></div>
+      <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:${totalProfit >= 0 ? '#10b981' : 'var(--danger)'}">৳${bn(totalProfit)}</div><div class="kpi-mini-label">📈 মোট লাভ</div></div>
+      <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:${noBuyCount ? 'var(--danger)' : 'var(--muted)'}">${bn(noBuyCount)}</div><div class="kpi-mini-label">⚠️ ক্রয়মূল্য নেই</div></div>
+      <div class="kpi-mini-card"><div class="kpi-mini-value" style="color:var(--accent)">${bn(num(localStorage.getItem("business_shop_pending")))}</div><div class="kpi-mini-label">⭐ রিভিউ অনুমোদনের অপেক্ষায়</div></div>
     `;
   }
 
   tbody.innerHTML = "";
   if (state.orders.length === 0){
-    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">কোনো Order নেই</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:20px">কোনো Order নেই</td></tr>';
     return;
   }
 
@@ -3222,6 +3237,7 @@ function renderOrders(){
       <td>${escapeHtml(o.productName) || "—"}<br><span style="font-size:.72rem;color:var(--muted)">${escapeHtml(o.category) || ""}</span></td>
       <td>${bn(num(o.quantity))}</td>
       <td style="color:var(--brand);font-weight:700">৳${bn(num(o.total))}</td>
+      <td style="font-weight:700;color:${orderProfit(o) === null ? 'var(--muted)' : (orderProfit(o) >= 0 ? '#10b981' : 'var(--danger)')}">${orderProfit(o) === null ? '<span title="ক্রয়মূল্য নেই">⚠️ —</span>' : '৳' + bn(orderProfit(o))}</td>
       <td>${statusEmoji} ${escapeHtml(o.paymentStatus) || "—"}</td>
       <td>${deliveryEmoji} ${escapeHtml(o.deliveryStatus) || "—"}</td>
       <td style="white-space:nowrap">
@@ -3300,9 +3316,9 @@ window.saveOrder = function(id){
   };
   if (id){
     const idx = state.orders.findIndex(x => x.id === id);
-    if (idx >= 0) Object.assign(state.orders[idx], data);
+    if (idx >= 0){ const prev = state.orders[idx].deliveryStatus; Object.assign(state.orders[idx], data); pushShopStatus(state.orders[idx], prev); }
   } else {
-    state.orders.push(Object.assign({ id: uid() }, data));
+    state.orders.push(Object.assign({ id: uid(), buyPrice: product ? num(product.buyPrice) : 0 }, data));
     if (product){
       product.stock = Math.max(0, num(product.stock) - qty);
       product.sold = num(product.sold) + qty;
@@ -3511,6 +3527,17 @@ function renderSuppliers(){
     `;
   }
 
+  let sr = document.getElementById("supProfit");
+  if (!sr){ sr = document.createElement("div"); sr.id = "supProfit"; sr.className = "card"; list.parentNode.insertBefore(sr, list); }
+  const sagg = {};
+  state.orders.forEach(o => {
+    const p = state.products.find(x => x.id === o.productId), sup = (p && p.supplier) || ""; if (!sup) return;
+    const a = sagg[sup] = sagg[sup] || { q: 0, rev: 0, pf: 0 }; a.q += num(o.quantity); a.rev += num(o.total);
+    const pr = orderProfit(o); if (pr !== null) a.pf += pr;
+  });
+  const sks = Object.keys(sagg).sort((x, y) => sagg[y].pf - sagg[x].pf);
+  sr.innerHTML = sks.length ? '<h3 style="margin:0 0 8px">📊 সাপ্লায়ারভিত্তিক বিক্রি ও লাভ</h3><div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Supplier</th><th>বিক্রি</th><th>আয়</th><th>লাভ</th></tr></thead><tbody>' +
+    sks.map(k => '<tr><td>' + escapeHtml(k) + '</td><td>' + bn(sagg[k].q) + '</td><td>৳' + bn(sagg[k].rev) + '</td><td style="font-weight:700;color:#10b981">৳' + bn(sagg[k].pf) + '</td></tr>').join("") + '</tbody></table></div>' : "";
   list.innerHTML = "";
   if (state.suppliers.length === 0){
     list.innerHTML = '<p style="text-align:center;color:var(--muted);padding:30px">কোনো Supplier নেই। "নতুন Supplier" ক্লিক করো।</p>';
@@ -4231,6 +4258,12 @@ function renderWebsite(){
     { key: "orders", label: "Orders", icon: "🛒" }
   ];
 
+  let sr = document.getElementById("srcReport");
+  if (!sr){ sr = document.createElement("div"); sr.id = "srcReport"; sr.style.marginTop = "14px"; grid.parentNode.insertBefore(sr, grid.nextSibling); }
+  const ss = state.shopSrc || {}, sks = Object.keys(ss).sort((a, b) => ss[b].o - ss[a].o);
+  sr.innerHTML = '<h4 style="margin:0 0 6px">🔗 উৎস অনুযায়ী Shop অর্ডার</h4>' + (sks.length ?
+    '<table class="data-table"><thead><tr><th>উৎস (src)</th><th>অর্ডার</th><th>টাকা</th></tr></thead><tbody>' + sks.map(k => '<tr><td>' + escapeHtml(k) + '</td><td>' + bn(ss[k].o) + '</td><td>৳' + bn(ss[k].rev) + '</td></tr>').join("") + '</tbody></table>' : '') +
+    '<p style="color:var(--muted);font-size:.8rem;margin:6px 0 0">লাইভ/পোস্টের লিংকে <b>?src=live1</b> বা <b>&amp;src=fbpost2</b> জুড়ে দিলে এখানে কোন উৎস থেকে কত অর্ডার এলো দেখা যাবে।</p>';
   grid.innerHTML = "";
   metrics.forEach(m => {
     const curr = num(latest[m.key]);
@@ -4321,7 +4354,8 @@ window.saveWebsiteStat = function(){
     pageViews: num(document.getElementById("wsPageViews").value),
     formSubmit: num(document.getElementById("wsFormSubmit").value),
     whatsappClick: num(document.getElementById("wsWhatsappClick").value),
-    orders: num(document.getElementById("wsOrders").value)
+    orders: num(document.getElementById("wsOrders").value),
+    auto: false
   };
   if (existing >= 0){
     Object.assign(state.websiteStats[existing], data);
@@ -4481,6 +4515,222 @@ function renderAllQuarterData(){
 }
 
 /* ============================================================
+   SHOP LINK — দোকানের অর্ডার আনা (স্টকের মালিক = শপ)
+   পাসওয়ার্ড শুধু এই ব্রাউজারে থাকে; state বা Google Sheet-এ যায় না
+   ============================================================ */
+const SYNC_PW_KEY = "business_sync_pw", SHOP_URL_KEY = "business_shop_url", SHOP_PW_KEY = "business_shop_pw";
+const SHOP_API_DEFAULT = "https://script.google.com/macros/s/AKfycbygiqtld8GgbiK5xAk-fKWle4Qs433SzKyoKxMl_YN7caqlCzUsxNutmrO3AEpbNc6s/exec";
+function getSyncPw(){ return localStorage.getItem(SYNC_PW_KEY) || ""; }
+function sheetPostRaw(body){
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+  return fetch(syncUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify(Object.assign({ pw: getSyncPw() }, body)), signal: c.signal }).finally(() => clearTimeout(t));
+}
+function fillShopCfg(){
+  document.getElementById("syncPwInput").value = getSyncPw();
+  document.getElementById("shopUrlInput").value = localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT;
+  document.getElementById("shopPwInput").value = localStorage.getItem(SHOP_PW_KEY) || "";
+}
+function bindShop(){
+  const imp = document.getElementById("importShopBtn");
+  if (imp) imp.addEventListener("click", importShopOrders);
+  const si = document.getElementById("shopToInvBtn"); if (si) si.addEventListener("click", createInventoryFromShop);
+  const sv = document.getElementById("saveShopCfg");
+  if (sv) sv.addEventListener("click", () => {
+    localStorage.setItem(SYNC_PW_KEY, document.getElementById("syncPwInput").value);
+    localStorage.setItem(SHOP_URL_KEY, document.getElementById("shopUrlInput").value.trim());
+    localStorage.setItem(SHOP_PW_KEY, document.getElementById("shopPwInput").value);
+    toast("✅ সেভ হয়েছে", "success");
+  });
+}
+const PACK_RULE = { pk_3: 1, pk_4: 1 }; // প্রতি Shop অর্ডারে কোন Packaging আইটেম কয়টা কমবে (id: সংখ্যা), নিজের মতো বদলান
+function applyPack(sign){
+  Object.keys(PACK_RULE).forEach(id => {
+    const p = state.packaging.find(x => x.id === id); if (!p) return;
+    p.stock = Math.max(0, num(p.stock) - sign * PACK_RULE[id]);
+    p.used = Math.max(0, num(p.used) + sign * PACK_RULE[id]);
+  });
+}
+function shopProdsCache(){ try { return JSON.parse(localStorage.getItem("business_shop_prods")) || []; } catch(e){ return []; } }
+function pushShopStatus(o, prev){
+  if (!o || !o.shopOrderId || o.deliveryStatus === prev) return;
+  const st = { Delivered: "ডেলিভারড", Courier: "শিপড" }[o.deliveryStatus];
+  const pw = localStorage.getItem(SHOP_PW_KEY) || "";
+  if (!st || !pw) return;
+  fetch(localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "setStatus", password: pw, orderId: o.shopOrderId, status: st }) })
+    .then(r => r.json()).then(r => toast(r.ok ? "🛍️ শপে স্ট্যাটাস: " + st : "❌ শপে স্ট্যাটাস যায়নি: " + (r.error || ""), r.ok ? "success" : "error"))
+    .catch(() => toast("❌ শপে স্ট্যাটাস যায়নি", "error"));
+}
+/* KPI: ডেলিভারড শপ অর্ডার থেকে সপ্তাহের বিক্রি ও আয় (হাতে লেখা সপ্তাহ বদলায় না) */
+function syncKpiFromShop(list){
+  const agg = {};
+  list.forEach(o => {
+    if (o.status !== "ডেলিভারড") return;
+    const t = new Date(o.time.slice(0, 10)).getTime();
+    state.quarters.forEach(q => {
+      const i = Math.floor((t - new Date(q.startDate).getTime()) / (7 * 864e5));
+      if (i < 0 || i > 12 || t > new Date(q.endDate).getTime()) return;
+      agg[q.id] = agg[q.id] || {}; agg[q.id][i] = agg[q.id][i] || { s: 0, m: 0 };
+      agg[q.id][i].s++; agg[q.id][i].m += num(o.total);
+    });
+  });
+  state.quarters.forEach(q => {
+    const a = agg[q.id]; if (!a) return;
+    q.kpi = q.kpi || {};
+    Object.keys(a).forEach(i => {
+      const k = q.kpi[i] = q.kpi[i] || {};
+      if ((num(k.s) || num(k.m)) && !k.auto) return; // হাতে লেখা আছে
+      k.auto = true; k.s = a[i].s; k.m = a[i].m;
+    });
+  });
+}
+function pushShopPrice(p, oldPrice){
+  const pw = localStorage.getItem(SHOP_PW_KEY) || "", np = num(p.sellPrice);
+  if (!p.shopId || !pw || !np || np === oldPrice) return;
+  if (!confirm("শপেও এই প্রোডাক্টের দাম ৳" + np + " করবেন?")) return;
+  fetch(localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ action: "update", password: pw, id: p.shopId, product: { price: np } }) })
+    .then(r => r.json()).then(r => toast(r.ok ? "🛍️ শপে দাম বদলেছে" : "❌ শপে দাম যায়নি: " + (r.error || ""), r.ok ? "success" : "error"))
+    .catch(() => toast("❌ শপে দাম যায়নি", "error"));
+}
+function syncWebsiteFromShop(list){
+  const cnt = {};
+  list.forEach(o => { if (o.status === "বাতিল") return; const w = getWeekKey(o.time.slice(0, 10)); cnt[w] = (cnt[w] || 0) + 1; });
+  Object.keys(cnt).forEach(w => {
+    let s = state.websiteStats.find(x => x.week === w);
+    if (!s){ s = { id: uid(), week: w, visitors: 0, pageViews: 0, formSubmit: 0, whatsappClick: 0, orders: 0, auto: true }; state.websiteStats.push(s); }
+    if (s.auto || !num(s.orders)){ s.orders = cnt[w]; s.auto = true; }
+  });
+}
+function syncQuarterFromShop(list){
+  state.quarters.forEach(q => {
+    const a = new Date(q.startDate).getTime(), b = new Date(q.endDate).getTime();
+    q.shopSold = list.filter(o => { const t = new Date(o.time.slice(0, 10)).getTime(); return o.status === "ডেলিভারড" && t >= a && t <= b; }).length;
+  });
+}
+function syncSources(list){
+  const s = {};
+  list.forEach(o => {
+    if (o.status === "বাতিল") return;
+    const m = String(o.note || "").match(/\[src:([\w-]+)\]/), k = m ? m[1] : "(সরাসরি)";
+    const a = s[k] = s[k] || { o: 0, rev: 0 }; a.o++; a.rev += num(o.total);
+  });
+  state.shopSrc = s;
+}
+async function createInventoryFromShop(){
+  const url = localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT, pw = localStorage.getItem(SHOP_PW_KEY) || "";
+  if (!pw){ toast("⚠️ Settings-এ Shop পাসওয়ার্ড দাও", "error"); return; }
+  let r;
+  try { r = await (await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "exportAll", password: pw }) })).json(); }
+  catch(err){ toast("❌ " + err.message, "error"); return; }
+  if (!r.ok){ toast("❌ " + (r.error || "Shop সমস্যা"), "error"); return; }
+  localStorage.setItem("business_shop_prods", JSON.stringify(r.products || []));
+  const ln = s => String(s || "").trim().toLowerCase();
+  let made = 0, linked = 0;
+  (r.products || []).forEach(sp => {
+    if (state.products.some(x => String(x.shopId) === String(sp.id))) return;
+    const byName = state.products.find(x => !x.shopId && ln(x.name) === ln(sp.name));
+    if (byName){ byName.shopId = String(sp.id); linked++; return; }
+    const cat = state.categories.find(c => ln(c.name) === ln(sp.category)) || state.categories[0];
+    const n = Number(sp.stock);
+    state.products.push({ id: uid(), sold: 0, photos: [], addedDate: today(), category: cat ? cat.name : "", name: sp.name, sku: "", buyPrice: 0,
+      sellPrice: num(sp.price), stock: (String(sp.stock).trim() !== "" && !isNaN(n)) ? n : 0, supplier: "", size: "", weight: "", material: "", imageUrl: "", notes: "", shopId: String(sp.id) });
+    made++;
+  });
+  save(); renderInventory();
+  toast("✅ নতুন " + bn(made) + "টি, জোড়া লাগল " + bn(linked) + "টি। এবার ক্রয়মূল্য বসাও", "success");
+}
+async function importShopOrders(){
+  const url = localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT, pw = localStorage.getItem(SHOP_PW_KEY) || "";
+  if (!pw){ toast("⚠️ Settings-এ Shop পাসওয়ার্ড দাও", "error"); return; }
+  toast("🛍️ Shop থেকে আনা হচ্ছে...");
+  let r;
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "exportAll", password: pw }) });
+    r = await res.json();
+  } catch(err){ toast("❌ " + err.message, "error"); return; }
+  if (!r.ok){ toast("❌ " + (r.error || "Shop সমস্যা"), "error"); return; }
+  localStorage.setItem("business_shop_prods", JSON.stringify(r.products || []));
+  try {
+    const rv = await (await fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "pendingReviews", password: pw }) })).json();
+    if (rv.ok) localStorage.setItem("business_shop_pending", String((rv.list || []).length));
+  } catch(e){}
+  const d10 = s => String(s || "").replace(/\D/g, "").slice(-10);
+  const lname = s => String(s || "").trim().toLowerCase();
+  const stMap = { "ডেলিভারড": "Delivered", "শিপড": "Courier" };
+  let added = 0, paidNow = 0, removed = 0, noBuy = 0, unl = 0;
+  const firstRun = !state.shopImported; // প্রথমবারে পুরনো অর্ডারের Packaging কাটা হয় না
+  /* স্টক: শপই মালিক, নাম বা shopId মিললে শপের স্টক বসে */
+  (r.products || []).forEach(sp => {
+    const p = state.products.find(x => String(x.shopId) === String(sp.id)) || state.products.find(x => !x.shopId && lname(x.name) === lname(sp.name));
+    if (!p) return;
+    p.shopId = String(sp.id);
+    const n = Number(sp.stock);
+    if (String(sp.stock).trim() !== "" && !isNaN(n)) p.stock = n;
+  });
+  /* আগে জোড়া না থাকা অর্ডার লাইন এখন জোড়া লাগলে মিলিয়ে দেওয়া */
+  state.orders.forEach(x => {
+    if (!x.shopOrderId || x.productId) return;
+    const p = state.products.find(q => q.shopId && ((x.shopItemId && String(q.shopId) === String(x.shopItemId)) || String(q.name || "").trim().toLowerCase() === String(x.productName || "").trim().toLowerCase()));
+    if (!p) return;
+    x.productId = p.id; x.category = p.category; if (!num(x.buyPrice)) x.buyPrice = num(p.buyPrice);
+    p.sold = num(p.sold) + num(x.quantity);
+  });
+  (r.orders || []).forEach(o => {
+    const cancelled = o.status === "বাতিল", delivered = o.status === "ডেলিভারড";
+    const mine = state.orders.filter(x => x.shopOrderId === o.orderId);
+    if (cancelled){
+      if (mine.length){
+        const pk = state.payments.find(x => x.shopOrderId === o.orderId); if (pk && pk.packed) applyPack(-1);
+        mine.forEach(x => { const p = state.products.find(q => q.id === x.productId); if (p) p.sold = Math.max(0, num(p.sold) - num(x.quantity)); });
+        state.orders = state.orders.filter(x => x.shopOrderId !== o.orderId);
+        state.payments = state.payments.filter(x => x.shopOrderId !== o.orderId);
+        removed++;
+      }
+      return;
+    }
+    if (!mine.length){
+      const items = (o.items && o.items.length) ? o.items : [{ id: "", name: o.product, price: o.price, qty: o.qty }];
+      items.forEach((it, i) => {
+        const p = state.products.find(q => q.shopId && String(q.shopId) === String(it.id));
+        state.orders.push({ id: uid(), shopOrderId: o.orderId, date: o.time.slice(0, 10), customerName: o.name,
+          productId: p ? p.id : "", shopItemId: String(it.id || ""), buyPrice: p ? num(p.buyPrice) : 0, productName: it.name, category: p ? p.category : "", quantity: num(it.qty), unitPrice: num(it.price),
+          total: num(it.qty) * num(it.price), paymentStatus: "Due", paymentMethod: "COD", deliveryStatus: stMap[o.status] || "Pending",
+          notes: "Website " + o.orderId + (i === 0 && o.deliveryFee ? " · ডেলিভারি ৳" + o.deliveryFee : "") });
+        if (p) p.sold = num(p.sold) + num(it.qty);
+        if (!p) unl++;
+        if (!p || !num(p.buyPrice)) noBuy++;
+      });
+      state.payments.push({ id: uid(), shopOrderId: o.orderId, date: o.time.slice(0, 10), customerName: o.name, orderId: o.orderId,
+        total: o.total, advance: 0, paid: 0, due: o.total, dueDate: "", status: "Due", method: "COD", notes: "Website order", packed: !firstRun });
+      if (!firstRun) applyPack(1);
+      let c = state.customers.find(x => d10(x.phone) && d10(x.phone) === d10(o.phone));
+      if (!c){
+        state.customers.push({ id: uid(), name: o.name, phone: o.phone, source: "Website", service: o.product, amount: o.total, status: "New",
+          firstContact: today(), lastContact: today(), nextFollowup: "", totalValue: o.total, notes: o.district || "" });
+      } else { c.lastContact = today(); c.totalValue = num(c.totalValue) + num(o.total); }
+      added++;
+    } else {
+      mine.forEach(x => { x.deliveryStatus = stMap[o.status] || "Pending"; });
+    }
+    /* ক্যাশ অন ডেলিভারি: ডেলিভারড হলে Paid, আর তখনই আয়ে যোগ */
+    const pay = state.payments.find(x => x.shopOrderId === o.orderId);
+    if (delivered && pay && num(pay.due) > 0){
+      pay.paid = num(pay.total); pay.due = 0; pay.status = "Paid";
+      state.orders.filter(x => x.shopOrderId === o.orderId).forEach(x => { x.paymentStatus = "Paid"; });
+      const te = getTodayDaily(); te.income = num(te.income) + num(pay.total);
+      const c = state.customers.find(x => d10(x.phone) && d10(x.phone) === d10(o.phone)); if (c) c.status = "Paid";
+      paidNow++;
+    }
+  });
+  syncKpiFromShop(r.orders || []); syncWebsiteFromShop(r.orders || []); syncQuarterFromShop(r.orders || []); syncSources(r.orders || []); state.shopImported = true;
+  save();
+  try { renderOrders(); renderPayments(); renderInventory(); renderCustomers(); renderTodayDashboard(); renderKPI(); renderPackaging(); renderPipeline(); renderWebsite(); renderSuppliers(); } catch(e){ console.warn(e); }
+  toast("✅ নতুন " + bn(added) + ", Paid " + bn(paidNow) + (removed ? ", বাতিল " + bn(removed) : "") + (unl ? " · 🔗 " + bn(unl) + "টি লাইন Inventory-র সাথে জোড়া নেই" : "") + (noBuy ? " · ⚠️ " + bn(noBuy) + "টি লাইনে ক্রয়মূল্য নেই" : ""), (noBuy || unl) ? "error" : "success");
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 function init(){
@@ -4511,6 +4761,7 @@ function init(){
   try { bindWebsite(); } catch(e){ console.warn("bindWebsite:", e); }
   try { bindGoals(); } catch(e){ console.warn("bindGoals:", e); }
   try { bindHabits(); } catch(e){ console.warn("bindHabits:", e); }
+  try { bindShop(); } catch(e){ console.warn("bindShop:", e); }
 
   const sel = document.getElementById("quarterSelect");
   if (sel) sel.addEventListener("change", () => switchQuarter(sel.value));
@@ -4560,7 +4811,7 @@ function init(){
   window.addEventListener("beforeunload", () => {
     if (syncUrl && autoSyncEnabled){
       try {
-        const blob = new Blob([JSON.stringify({action: "save", data: state})], {type: "application/json"});
+        const blob = new Blob([JSON.stringify({action: "save", pw: getSyncPw(), data: state})], {type: "text/plain;charset=utf-8"});
         navigator.sendBeacon(syncUrl, blob);
       } catch(e){}
     }
