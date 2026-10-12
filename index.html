@@ -1141,7 +1141,7 @@ function qCustomers(q){ return (q.pipeline && q.pipeline.sold) || 0; }
    ============================================================ */
 function save(){
   try { localStorage.setItem(STORE, JSON.stringify(state)); }
-  catch(e){ console.warn("Save failed:", e); }
+  catch(e){ console.warn("Save failed:", e); toast("⚠️ ব্রাউজারে জায়গা শেষ, সেভ হয়নি! বড় ছবি কমাও বা মুছো", "error"); }
   scheduleAutoSync();
 }
 
@@ -2714,7 +2714,7 @@ function renderInventory(){
     else if (stock <= 3) badgeHTML = '<span class="product-badge low">⚠️ LOW</span>';
     const cat = state.categories.find(c => c.name === p.category);
     const catIcon = cat ? cat.icon : "📦";
-    const safeImgUrl = escapeAttr(p.imageUrl);
+    const safeImgUrl = escapeAttr(shopImg(p.imageUrl));
     const safeName = escapeAttr(p.name);
     const photoCount = (p.photos && p.photos.length) || 0;
     const photoBadge = photoCount > 0 ? '<div class="product-photo-count">📸 ' + bn(photoCount) + '</div>' : '';
@@ -2722,7 +2722,7 @@ function renderInventory(){
     card.className = "product-card";
     card.innerHTML = `
       <div class="product-image">
-        ${p.imageUrl ? '<img src="' + safeImgUrl + '" alt="' + safeName + '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + catIcon + '\'">' : catIcon}
+        ${p.imageUrl ? '<img referrerpolicy="no-referrer" src="' + safeImgUrl + '" alt="' + safeName + '" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'' + catIcon + '\'">' : catIcon}
         ${badgeHTML}
         ${photoBadge}
       </div>
@@ -3044,7 +3044,9 @@ function renderPhotos(){
 
   const photos = product.photos || [];
   if (photos.length === 0){
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)">এই প্রোডাক্টে এখনো কোনো ছবি নেই। উপরে থেকে আপলোড করো।</div>';
+    grid.innerHTML = product.imageUrl
+      ? '<div class="photo-thumb"><img referrerpolicy="no-referrer" src="' + escapeAttr(shopImg(product.imageUrl)) + '" alt="photo"><div class="photo-primary">🔗 লিংক/শপের ছবি</div></div><div style="grid-column:1/-1;color:var(--muted);font-size:.85rem">এটা লিংক থেকে আসা ছবি। নিজের ছবি আপলোড করলে এখানে যোগ হবে।</div>'
+      : '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--muted)">এই প্রোডাক্টে এখনো কোনো ছবি নেই। উপরে থেকে আপলোড করো।</div>';
   } else {
     grid.innerHTML = "";
     photos.forEach((photo, idx) => {
@@ -3192,7 +3194,7 @@ function orderBuy(o){
 }
 function orderProfit(o){
   const b = orderBuy(o);
-  return b === null ? null : num(o.total) - b * num(o.quantity);
+  return b === null ? null : num(o.total) - b * num(o.quantity) - packCostFor(o);
 }
 function renderOrders(){
   const mini = document.getElementById("ordersKpiMini");
@@ -3869,6 +3871,25 @@ function renderPackaging(){
     `;
   }
 
+  let rb = document.getElementById("packRuleBox");
+  if (!rb){
+    rb = document.createElement("div"); rb.id = "packRuleBox"; rb.className = "card";
+    tbody.closest("table").parentNode.insertAdjacentElement("afterend", rb);
+    rb.addEventListener("change", e => {
+      const t = e.target;
+      if (t.dataset.rule){ state.packRule = Object.assign({}, packRule()); state.packRule[t.dataset.rule] = Math.max(0, num(t.value)); }
+      else if (t.id === "packBoxQty") state.packBoxQty = Math.max(0, num(t.value));
+      else if (t.id === "packInProfit") state.packInProfit = t.checked;
+      else return;
+      save(); try { renderOrders(); } catch(x){}
+      toast("✅ নিয়ম সেভ", "success");
+    });
+  }
+  const rr = packRule();
+  rb.innerHTML = '<h3 style="margin:0 0 6px">⚙️ অটো কাটার নিয়ম (প্রতি Shop অর্ডারে)</h3>' +
+    state.packaging.map(p => '<label style="display:inline-flex;gap:6px;align-items:center;margin:4px 14px 4px 0">' + escapeHtml(p.name) + ' <input type="number" min="0" style="width:64px" data-rule="' + escapeAttr(p.id) + '" value="' + num(rr[p.id]) + '"></label>').join("") +
+    '<div style="margin-top:10px">📦 বক্স বাছাই: অর্ডারে মোট <input type="number" min="0" id="packBoxQty" style="width:64px" value="' + num(state.packBoxQty) + '"> বা বেশি পণ্য হলে Gift Box (Large), কম হলে Gift Box (Small) (০ = বন্ধ)</div>' +
+    '<label style="display:block;margin-top:10px"><input type="checkbox" id="packInProfit" ' + (state.packInProfit ? "checked" : "") + '> Packaging খরচ প্রতি Shop অর্ডারের লাভ থেকে বাদ দাও</label>';
   tbody.innerHTML = "";
   if (state.packaging.length === 0){
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">কোনো Packaging Item নেই</td></tr>';
@@ -4543,13 +4564,34 @@ function bindShop(){
     toast("✅ সেভ হয়েছে", "success");
   });
 }
-const PACK_RULE = { pk_3: 1, pk_4: 1 }; // প্রতি Shop অর্ডারে কোন Packaging আইটেম কয়টা কমবে (id: সংখ্যা), নিজের মতো বদলান
-function applyPack(sign){
-  Object.keys(PACK_RULE).forEach(id => {
-    const p = state.packaging.find(x => x.id === id); if (!p) return;
-    p.stock = Math.max(0, num(p.stock) - sign * PACK_RULE[id]);
-    p.used = Math.max(0, num(p.used) + sign * PACK_RULE[id]);
+function packRule(){ return state.packRule || { pk_3: 1, pk_4: 1 }; }
+function packItems(qty){
+  const r = Object.assign({}, packRule()), bq = num(state.packBoxQty);
+  if (bq > 0){ const id = qty >= bq ? "pk_2" : "pk_1"; r[id] = (r[id] || 0) + 1; } // বক্স বাছাই: বড় অর্ডারে Large, ছোটতে Small
+  return r;
+}
+function applyPack(sign, qty){
+  const r = packItems(qty);
+  Object.keys(r).forEach(id => {
+    const p = state.packaging.find(x => x.id === id); if (!p || !num(r[id])) return;
+    p.stock = Math.max(0, num(p.stock) - sign * r[id]);
+    p.used = Math.max(0, num(p.used) + sign * r[id]);
   });
+}
+function orderPackCost(qty){
+  const r = packItems(qty);
+  return Object.keys(r).reduce((s, id) => { const p = state.packaging.find(x => x.id === id); return s + (p ? num(p.unitCost) * num(r[id]) : 0); }, 0);
+}
+function packCostFor(o){ // শপ-অর্ডারের প্রথম লাইনে একবার
+  if (!state.packInProfit || !o.shopOrderId) return 0;
+  const lines = state.orders.filter(x => x.shopOrderId === o.shopOrderId);
+  return lines[0] === o ? orderPackCost(lines.reduce((s, x) => s + num(x.quantity), 0)) : 0;
+}
+function shopImg(raw){
+  const s = String(raw || ""); if (s.indexOf("data:") === 0) return s;
+  const u = s.split(/[\s,|]+/).filter(Boolean)[0] || "";
+  const m = u.match(/drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=|thumbnail\?(?:.*&)?id=)([\w-]+)/);
+  return m ? "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w700" : u;
 }
 function shopProdsCache(){ try { return JSON.parse(localStorage.getItem("business_shop_prods")) || []; } catch(e){ return []; } }
 function pushShopStatus(o, prev){
@@ -4629,13 +4671,14 @@ async function createInventoryFromShop(){
   const ln = s => String(s || "").trim().toLowerCase();
   let made = 0, linked = 0;
   (r.products || []).forEach(sp => {
-    if (state.products.some(x => String(x.shopId) === String(sp.id))) return;
+    const ex = state.products.find(x => String(x.shopId) === String(sp.id));
+    if (ex){ if (!ex.imageUrl && sp.image) ex.imageUrl = shopImg(sp.image); return; }
     const byName = state.products.find(x => !x.shopId && ln(x.name) === ln(sp.name));
-    if (byName){ byName.shopId = String(sp.id); linked++; return; }
+    if (byName){ byName.shopId = String(sp.id); if (!byName.imageUrl && sp.image) byName.imageUrl = shopImg(sp.image); linked++; return; }
     const cat = state.categories.find(c => ln(c.name) === ln(sp.category)) || state.categories[0];
     const n = Number(sp.stock);
     state.products.push({ id: uid(), sold: 0, photos: [], addedDate: today(), category: cat ? cat.name : "", name: sp.name, sku: "", buyPrice: 0,
-      sellPrice: num(sp.price), stock: (String(sp.stock).trim() !== "" && !isNaN(n)) ? n : 0, supplier: "", size: "", weight: "", material: "", imageUrl: "", notes: "", shopId: String(sp.id) });
+      sellPrice: num(sp.price), stock: (String(sp.stock).trim() !== "" && !isNaN(n)) ? n : 0, supplier: "", size: "", weight: "", material: "", imageUrl: shopImg(sp.image), notes: "", shopId: String(sp.id) });
     made++;
   });
   save(); renderInventory();
@@ -4666,6 +4709,7 @@ async function importShopOrders(){
     const p = state.products.find(x => String(x.shopId) === String(sp.id)) || state.products.find(x => !x.shopId && lname(x.name) === lname(sp.name));
     if (!p) return;
     p.shopId = String(sp.id);
+    if (!p.imageUrl && sp.image) p.imageUrl = shopImg(sp.image);
     const n = Number(sp.stock);
     if (String(sp.stock).trim() !== "" && !isNaN(n)) p.stock = n;
   });
@@ -4682,7 +4726,7 @@ async function importShopOrders(){
     const mine = state.orders.filter(x => x.shopOrderId === o.orderId);
     if (cancelled){
       if (mine.length){
-        const pk = state.payments.find(x => x.shopOrderId === o.orderId); if (pk && pk.packed) applyPack(-1);
+        const pk = state.payments.find(x => x.shopOrderId === o.orderId); if (pk && pk.packed) applyPack(-1, mine.reduce((s, x) => s + num(x.quantity), 0));
         mine.forEach(x => { const p = state.products.find(q => q.id === x.productId); if (p) p.sold = Math.max(0, num(p.sold) - num(x.quantity)); });
         state.orders = state.orders.filter(x => x.shopOrderId !== o.orderId);
         state.payments = state.payments.filter(x => x.shopOrderId !== o.orderId);
@@ -4704,7 +4748,7 @@ async function importShopOrders(){
       });
       state.payments.push({ id: uid(), shopOrderId: o.orderId, date: o.time.slice(0, 10), customerName: o.name, orderId: o.orderId,
         total: o.total, advance: 0, paid: 0, due: o.total, dueDate: "", status: "Due", method: "COD", notes: "Website order", packed: !firstRun });
-      if (!firstRun) applyPack(1);
+      if (!firstRun) applyPack(1, items.reduce((s, it) => s + num(it.qty), 0));
       let c = state.customers.find(x => d10(x.phone) && d10(x.phone) === d10(o.phone));
       if (!c){
         state.customers.push({ id: uid(), name: o.name, phone: o.phone, source: "Website", service: o.product, amount: o.total, status: "New",
