@@ -651,7 +651,7 @@ body{background:#fff;padding:0}
 <h2>📊 সাপ্তাহিক Website Stats</h2>
 <button class="btn-add" id="addWebsiteStatBtn">➕ নতুন এন্ট্রি</button>
 <div style="overflow-x:auto"><table class="data-table">
-<thead><tr><th>সপ্তাহ</th><th>Visitors</th><th>Page Views</th><th>Form Submit</th><th>WhatsApp Click</th><th>Orders</th><th>Conversion</th><th></th></tr></thead>
+<thead><tr><th>সপ্তাহ</th><th>Visitors</th><th>Page Views</th><th>Form খোলা</th><th>WhatsApp Click</th><th>Orders</th><th>Conversion</th><th></th></tr></thead>
 <tbody id="websiteStatsBody"></tbody>
 </table></div>
 </div>
@@ -4274,17 +4274,11 @@ function renderWebsite(){
   const metrics = [
     { key: "visitors", label: "Visitors", icon: "👥" },
     { key: "pageViews", label: "Page Views", icon: "📄" },
-    { key: "formSubmit", label: "Form Submit", icon: "📝" },
+    { key: "formSubmit", label: "Form খোলা", icon: "📝" },
     { key: "whatsappClick", label: "WhatsApp Click", icon: "💬" },
     { key: "orders", label: "Orders", icon: "🛒" }
   ];
 
-  let sr = document.getElementById("srcReport");
-  if (!sr){ sr = document.createElement("div"); sr.id = "srcReport"; sr.style.marginTop = "14px"; grid.parentNode.insertBefore(sr, grid.nextSibling); }
-  const ss = state.shopSrc || {}, sks = Object.keys(ss).sort((a, b) => ss[b].o - ss[a].o);
-  sr.innerHTML = '<h4 style="margin:0 0 6px">🔗 উৎস অনুযায়ী Shop অর্ডার</h4>' + (sks.length ?
-    '<table class="data-table"><thead><tr><th>উৎস (src)</th><th>অর্ডার</th><th>টাকা</th></tr></thead><tbody>' + sks.map(k => '<tr><td>' + escapeHtml(k) + '</td><td>' + bn(ss[k].o) + '</td><td>৳' + bn(ss[k].rev) + '</td></tr>').join("") + '</tbody></table>' : '') +
-    '<p style="color:var(--muted);font-size:.8rem;margin:6px 0 0">লাইভ/পোস্টের লিংকে <b>?src=live1</b> বা <b>&amp;src=fbpost2</b> জুড়ে দিলে এখানে কোন উৎস থেকে কত অর্ডার এলো দেখা যাবে।</p>';
   grid.innerHTML = "";
   metrics.forEach(m => {
     const curr = num(latest[m.key]);
@@ -4340,6 +4334,7 @@ function renderWebsite(){
       });
     }
   }
+  try { renderWebExtras(); } catch(e){ console.warn("webExtras:", e); }
 }
 
 function bindWebsite(){
@@ -4353,7 +4348,7 @@ function bindWebsite(){
       <div class="info-field"><label>সপ্তাহের শুরু</label><input type="date" id="wsWeek" value="${currentWeek}"></div>
       <div class="info-field"><label>Visitors</label><input type="number" id="wsVisitors" value="0"></div>
       <div class="info-field"><label>Page Views</label><input type="number" id="wsPageViews" value="0"></div>
-      <div class="info-field"><label>Form Submit</label><input type="number" id="wsFormSubmit" value="0"></div>
+      <div class="info-field"><label>Form খোলা</label><input type="number" id="wsFormSubmit" value="0"></div>
       <div class="info-field"><label>WhatsApp Click</label><input type="number" id="wsWhatsappClick" value="0"></div>
       <div class="info-field"><label>Orders</label><input type="number" id="wsOrders" value="0"></div>
       <div class="modal-buttons">
@@ -4636,13 +4631,16 @@ function pushShopPrice(p, oldPrice){
     .then(r => r.json()).then(r => toast(r.ok ? "🛍️ শপে দাম বদলেছে" : "❌ শপে দাম যায়নি: " + (r.error || ""), r.ok ? "success" : "error"))
     .catch(() => toast("❌ শপে দাম যায়নি", "error"));
 }
-function syncWebsiteFromShop(list){
+function syncWebsiteFromShop(list, web){
   const cnt = {};
   list.forEach(o => { if (o.status === "বাতিল") return; const w = getWeekKey(o.time.slice(0, 10)); cnt[w] = (cnt[w] || 0) + 1; });
-  Object.keys(cnt).forEach(w => {
+  const wk = {}; ((web && web.weekly) || []).forEach(x => { wk[x.k] = x; });
+  Object.keys(Object.assign({}, cnt, wk)).forEach(w => {
     let s = state.websiteStats.find(x => x.week === w);
     if (!s){ s = { id: uid(), week: w, visitors: 0, pageViews: 0, formSubmit: 0, whatsappClick: 0, orders: 0, auto: true }; state.websiteStats.push(s); }
-    if (s.auto || !num(s.orders)){ s.orders = cnt[w]; s.auto = true; }
+    const manual = !s.auto && (num(s.visitors) || num(s.pageViews) || num(s.formSubmit) || num(s.whatsappClick));
+    if (!manual){ const x = wk[w]; if (x){ s.visitors = x.v; s.pageViews = x.pv; s.formSubmit = x.co; s.whatsappClick = x.wa + x.ms; } s.auto = true; }
+    if (s.auto || !num(s.orders)){ s.orders = cnt[w] || 0; s.auto = true; }
   });
 }
 function syncQuarterFromShop(list){
@@ -4659,6 +4657,129 @@ function syncSources(list){
     const a = s[k] = s[k] || { o: 0, rev: 0 }; a.o++; a.rev += num(o.total);
   });
   state.shopSrc = s;
+}
+const SHOP_SITE_DEFAULT = "https://gaziabdulahad.github.io/Shop/";
+function syncWebFromShop(r){
+  const w = r.web, list = r.orders || [], prods = r.products || [], od = {}, po = {}, byName = {}, pn = {};
+  const cut = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10);
+  prods.forEach(p => { byName[String(p.name).trim().toLowerCase()] = String(p.id); pn[String(p.id)] = p.name; });
+  list.forEach(o => {
+    if (o.status === "বাতিল") return;
+    const d = o.time.slice(0, 10), a = od[d] = od[d] || { n: 0, rev: 0 }; a.n++; a.rev += num(o.total);
+    if (d < cut) return;
+    const items = (o.items && o.items.length) ? o.items : [{ id: "", name: o.product, qty: o.qty }];
+    items.forEach(it => { const id = String(it.id || "") || byName[String(it.name || "").trim().toLowerCase()]; if (id) po[id] = (po[id] || 0) + num(it.qty || 1); });
+  });
+  const pr = (w && w.prod) || {};
+  state.shopWeb = w ? { at: new Date().toISOString(), daily: w.daily || [], weekly: w.weekly || [], dtop: w.dtop || {}, funnel: w.funnel || { v: 0, p: 0, c: 0, k: 0 }, srcv: w.srcv || {}, od: od, pn: pn,
+    prod: prods.map(p => ({ id: String(p.id), name: p.name, v: (pr[p.id] || {}).v || 0, c: (pr[p.id] || {}).c || 0, o: po[String(p.id)] || 0 })).sort((a, b) => b.v - a.v).slice(0, 15) } : null;
+  state.shopSubs = (r.subs || []).map(s => ({ phone: s.phone, name: s.name, source: s.source, time: s.time, vid: s.vid || "" }));
+  state.shopVid = list.filter(o => /\[v:[\w-]+\]/.test(String(o.note || ""))).map(o => ({ name: o.name, phone: o.phone, vid: String(o.note).match(/\[v:([\w-]+)\]/)[1], time: o.time.slice(0, 10) }));
+  state.shopHist = (w && w.hist) || {};
+}
+function bindWebExtras(box){
+  box.addEventListener("change", e => {
+    if (e.target.id === "rptDay"){ window._rptDay = e.target.value; renderWebExtras(); }
+    else if (e.target.id === "campPid"){ window._campPid = e.target.value; renderWebExtras(); }
+    else if (e.target.id === "campTpl"){ window._campTpl = e.target.value; renderWebExtras(); }
+  });
+  box.addEventListener("click", e => {
+    const t = e.target.closest("button,a"); if (!t) return;
+    if (t.id === "rptCopy"){ navigator.clipboard.writeText(window._rptText || "").then(() => toast("📋 কপি হয়েছে", "success")).catch(() => toast("কপি হয়নি", "error")); }
+    else if (t.id === "gaGo"){ fetchGa(); }
+    else if (t.id === "campCopy"){ navigator.clipboard.writeText(t.dataset.nums || "").then(() => toast("📋 নম্বর কপি হয়েছে", "success")).catch(() => {}); }
+    else if (t.dataset.send){ state.msgSent = state.msgSent || {}; state.msgSent[t.dataset.send] = today(); save(); setTimeout(renderWebExtras, 400); }
+    else if (t.dataset.opt){
+      if (!confirm("এই নম্বরে আর নতুন পণ্যের মেসেজ পাঠানো হবে না। ঠিক আছে?")) return;
+      state.optout = state.optout || {}; state.optout[t.dataset.opt] = today(); save(); renderWebExtras();
+    }
+  });
+}
+function renderWebExtras(){
+  const tab = document.getElementById("tab-website"); if (!tab) return;
+  let box = document.getElementById("webExtras");
+  if (!box){ box = document.createElement("div"); box.id = "webExtras"; tab.insertBefore(box, tab.firstChild); bindWebExtras(box); }
+  const card = (t, body) => '<div class="card"><h2>' + t + '</h2>' + body + '</div>';
+  const W = state.shopWeb;
+  if (!W){ box.innerHTML = card("📅 দৈনিক রিপোর্ট ও Analytics", '<p style="color:var(--muted)">Orders ট্যাবে <b>Shop থেকে অর্ডার আনো</b> চাপলে এখানে দৈনিক রিপোর্ট, ফানেল ও প্রোডাক্ট অ্যানালাইসিস আসবে। না এলে শপের Code.gs নতুন করে Deploy করা আছে কিনা দেখুন।</p>'); return; }
+  const day = window._rptDay || today();
+  const d = (W.daily || []).find(x => x.k === day) || { v: 0, pv: 0, wa: 0, ms: 0, cart: 0, co: 0 };
+  const od = (W.od || {})[day] || { n: 0, rev: 0 }, dt = (W.dtop || {})[day] || { p: [], s: [] };
+  const pn = id => (W.pn && W.pn[id]) || ("#" + id);
+  const conv = d.v ? Math.round(od.n / d.v * 1000) / 10 : 0;
+  const cell = (ic, v, l) => '<div class="analytics-card"><div class="analytics-icon">' + ic + '</div><div class="analytics-value">' + v + '</div><div class="analytics-label">' + l + '</div></div>';
+  window._rptText = "📊 দৈনিক রিপোর্ট " + day + "\nভিজিটর: " + bn(d.v) + "\nপেজ ভিউ: " + bn(d.pv) + "\nWhatsApp/Messenger ক্লিক: " + bn(d.wa + d.ms) + "\nকার্টে যোগ: " + bn(d.cart) + "\nফর্ম খোলা: " + bn(d.co) + "\nঅর্ডার: " + bn(od.n) + " (৳" + bn(od.rev) + ")\nConversion: " + bn(conv) + "%" +
+    (dt.p.length ? "\nবেশি দেখা: " + dt.p.map(x => pn(x[0]) + " (" + bn(x[1]) + ")").join(", ") : "");
+  let html = card("📅 দৈনিক রিপোর্ট", '<div style="margin-bottom:8px"><input type="date" id="rptDay" value="' + day + '"> <button class="btn-add" id="rptCopy" style="margin-left:8px">📋 রিপোর্ট কপি</button></div><div class="analytics-grid">' +
+    cell("👥", bn(d.v), "Visitors") + cell("📄", bn(d.pv), "Page Views") + cell("💬", bn(d.wa + d.ms), "WhatsApp/Messenger") + cell("🛒", bn(d.cart), "কার্টে যোগ") +
+    cell("📝", bn(d.co), "ফর্ম খোলা") + cell("📦", bn(od.n), "অর্ডার") + cell("💰", "৳" + bn(od.rev), "অর্ডারের টাকা") + cell("📊", bn(conv) + "%", "Conversion") + '</div>' +
+    (dt.p.length ? '<p style="margin:10px 0 2px"><b>🔥 বেশি দেখা:</b> ' + dt.p.map(x => escapeHtml(pn(x[0])) + " (" + bn(x[1]) + ")").join(", ") + '</p>' : '') +
+    (dt.s.length ? '<p style="margin:2px 0"><b>🔗 উৎস:</b> ' + dt.s.map(x => escapeHtml(x[0]) + " (" + bn(x[1]) + ")").join(", ") + '</p>' : '') +
+    '<p style="color:var(--muted);font-size:.8rem;margin:8px 0 0">সর্বশেষ আনা: ' + escapeHtml(String(W.at).slice(0, 16).replace("T", " ")) + '</p>');
+  // ফানেল (গত ৩০ দিন)
+  const cut = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), f = W.funnel;
+  const o30 = Object.keys(W.od || {}).filter(k => k >= cut).reduce((s, k) => s + W.od[k].n, 0);
+  const st = [["👥 ভিজিটর", f.v], ["👀 প্রোডাক্ট দেখেছে", f.p], ["🛒 কার্টে দিয়েছে", f.c], ["📝 ফর্ম খুলেছে", f.k], ["✅ অর্ডার করেছে", o30]];
+  html += card("🔻 ফানেল (গত ৩০ দিন)", st.map((s, i) => '<div style="margin:6px 0"><div style="display:flex;justify-content:space-between;font-size:.85rem"><span>' + s[0] + '</span><b>' + bn(s[1]) + (i && st[i - 1][1] ? ' <small style="color:var(--muted)">(আগের ধাপের ' + bn(Math.round(s[1] / st[i - 1][1] * 100)) + '%)</small>' : '') + '</b></div><div style="background:var(--brand);height:14px;border-radius:7px;width:' + Math.max(2, f.v ? Math.min(100, s[1] / f.v * 100) : 2) + '%"></div></div>').join("") +
+    '<p style="color:var(--muted);font-size:.8rem;margin:8px 0 0">প্রতি ধাপে কত জন পরের ধাপে গেল। কোন ধাপে বেশি কমছে সেটাই ঠিক করার জায়গা।</p>');
+  // প্রোডাক্ট অ্যানালাইসিস
+  html += card("🛍️ প্রোডাক্ট অ্যানালাইসিস (গত ৩০ দিন)", '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>প্রোডাক্ট</th><th>দেখা</th><th>কার্ট</th><th>অর্ডার</th><th>দেখা→অর্ডার</th><th></th></tr></thead><tbody>' +
+    (W.prod.length ? W.prod.map(p => '<tr><td>' + escapeHtml(p.name) + '</td><td>' + bn(p.v) + '</td><td>' + bn(p.c) + '</td><td>' + bn(p.o) + '</td><td>' + (p.v ? bn(Math.round(p.o / p.v * 1000) / 10) + "%" : "—") + '</td><td>' + (p.v >= 20 && p.o === 0 ? "👀 দেখে কিন্তু কেনে না" : (p.v < 5 ? "🔍 কম দেখা" : "")) + '</td></tr>').join("") : '<tr><td colspan="6" style="text-align:center;color:var(--muted)">এখনও ডেটা নেই</td></tr>') + '</tbody></table></div>');
+  // উৎস
+  const so = state.shopSrc || {}, sv = W.srcv || {}, sk = Object.keys(Object.assign({}, so, sv)).filter(k => k !== "(সরাসরি)").sort((a, b) => num(sv[b]) - num(sv[a]));
+  html += card("🔗 উৎস অনুযায়ী ফলাফল", (sk.length ? '<table class="data-table"><thead><tr><th>উৎস (src)</th><th>ভিজিটর</th><th>অর্ডার</th><th>Conversion</th><th>টাকা</th></tr></thead><tbody>' + sk.map(k => '<tr><td>' + escapeHtml(k) + '</td><td>' + bn(num(sv[k])) + '</td><td>' + bn((so[k] || {}).o || 0) + '</td><td>' + (num(sv[k]) ? bn(Math.round(((so[k] || {}).o || 0) / sv[k] * 1000) / 10) + "%" : "—") + '</td><td>৳' + bn((so[k] || {}).rev || 0) + '</td></tr>').join("") + '</tbody></table>' : '') +
+    '<p style="color:var(--muted);font-size:.8rem;margin:6px 0 0">লাইভ/পোস্টের লিংকে <b>?src=live1</b> বা <b>&amp;src=fbpost2</b> জুড়ে দিন।</p>');
+  // সাপ্তাহিক ট্রেন্ড + বিজ্ঞাপন খরচ/অর্ডার
+  const ws = state.websiteStats.slice().sort((a, b) => a.week.localeCompare(b.week)).slice(-8), mx = Math.max(1, ...ws.map(s => num(s.visitors)));
+  const adRe = /ad\b|ads|বিজ্ঞাপন|boost|promo|facebook|meta|ফেসবুক/i;
+  const adOf = w => { const e = new Date(new Date(w).getTime() + 6 * 864e5).toISOString().slice(0, 10); return (state.expenses || []).filter(x => x.date >= w && x.date <= e && adRe.test(String(x.category) + " " + String(x.reason))).reduce((s, x) => s + num(x.amount), 0); };
+  html += card("📈 সাপ্তাহিক ট্রেন্ড ও বিজ্ঞাপন খরচ", '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>সপ্তাহ</th><th>Visitors</th><th>অর্ডার</th><th>বিজ্ঞাপন খরচ</th><th>খরচ/অর্ডার</th></tr></thead><tbody>' +
+    (ws.length ? ws.map(s => { const ad = adOf(s.week); return '<tr><td>' + escapeHtml(s.week) + '</td><td>' + bn(num(s.visitors)) + '<div style="height:6px;background:var(--brand);border-radius:3px;width:' + Math.max(2, num(s.visitors) / mx * 100) + '%"></div></td><td>' + bn(num(s.orders)) + '</td><td>' + (ad ? "৳" + bn(ad) : "—") + '</td><td>' + (ad && num(s.orders) ? "৳" + bn(Math.round(ad / num(s.orders))) : "—") + '</td></tr>'; }).join("") : '<tr><td colspan="5" style="text-align:center;color:var(--muted)">এখনও ডেটা নেই</td></tr>') +
+    '</tbody></table></div><p style="color:var(--muted);font-size:.8rem;margin:6px 0 0">বিজ্ঞাপন খরচ আসে "খরচ" ট্যাব থেকে: ক্যাটাগরি বা কারণে Ad / বিজ্ঞাপন / Boost / Facebook লেখা এন্ট্রি ধরা হয়।</p>');
+  // নতুন পণ্যের খবর (শুধু সম্মতি দেওয়া ও আগের ক্রেতা)
+  const L10 = s => String(s || "").replace(/\D/g, "").slice(-10), opt = state.optout || {}, sent = state.msgSent || {}, seen = {}, cs = [];
+  const cmap = {};
+  (state.shopSubs || []).forEach(s => {
+    const k = L10(s.phone); if (!k || opt[k]) return;
+    const rm = /^restock-(.+)$/.exec(String(s.source || "")), rid = rm ? rm[1] : "";
+    if (cmap[k]){ if (rid) cmap[k].rids.push(rid); return; }
+    seen[k] = 1; cmap[k] = { k, phone: s.phone, name: s.name || "", tag: "✅ সম্মতি দিয়েছে", rids: rid ? [rid] : [] }; cs.push(cmap[k]);
+  });
+  state.customers.forEach(c => { if (c.source !== "Website") return; const k = L10(c.phone); if (!k || seen[k] || opt[k]) return; seen[k] = 1; cs.push({ k, phone: c.phone, name: c.name || "", tag: "🛒 আগে কিনেছে" }); });
+  const prods = shopProdsCache().slice().sort((a, b) => Number(b.id) - Number(a.id)), pid = window._campPid || (prods[0] && prods[0].id), cp = prods.find(p => String(p.id) === String(pid));
+  const tpl = window._campTpl || 'আসসালামু আলাইকুম {নাম}, আমাদের নতুন পণ্য "{পণ্য}" এসেছে — ৳{দাম}। দেখুন: {লিংক}';
+  const link = cp ? SHOP_SITE_DEFAULT + "product.html?id=" + encodeURIComponent(cp.id) + "&src=wa_new" : "";
+  cs.forEach(c => { if (c.rids && c.rids.length) c.tag = (cp && c.rids.includes(String(cp.id))) ? "🔔 এই পণ্যের জন্য অপেক্ষায়" : "🔔 স্টকে এলে চেয়েছে: " + pn(c.rids[0]); });
+  cs.sort((a, b) => ((cp && b.rids && b.rids.includes(String(cp.id))) ? 1 : 0) - ((cp && a.rids && a.rids.includes(String(cp.id))) ? 1 : 0));
+  const msgFor = c => tpl.replace("{নাম}", c.name || "").replace("{পণ্য}", cp ? cp.name : "").replace("{দাম}", cp ? cp.price : "").replace("{লিংক}", link).replace(" ,", ",");
+  html += card("📣 নতুন পণ্যের খবর পাঠান", '<p style="color:var(--muted);font-size:.85rem;margin:0 0 8px">শুধু যারা নিজে নম্বর দিয়ে খবর চেয়েছে (সাইটের ফর্ম বা অর্ডারের সময় টিক) এবং আগের ক্রেতাদের জন্য। কেউ বন্ধ করতে বললে 🚫 চাপুন। বেনামি ভিজিটরের কোনো নম্বর বা পরিচয় রাখা হয় না, তাই তাদের কাছে পৌঁছাতে Facebook বিজ্ঞাপনের রিটার্গেটিং লাগবে।</p>' +
+    '<div class="info-field"><label>কোন পণ্য</label><select id="campPid">' + prods.map(p => '<option value="' + escapeAttr(p.id) + '"' + (String(p.id) === String(pid) ? " selected" : "") + '>' + escapeHtml(p.name) + '</option>').join("") + '</select></div>' +
+    '<div class="info-field"><label>মেসেজ ({নাম} {পণ্য} {দাম} {লিংক} বসবে)</label><textarea id="campTpl" style="min-height:70px">' + escapeHtml(tpl) + '</textarea></div>' +
+    '<p style="margin:6px 0"><b>' + bn(cs.length) + ' জন</b> · <button class="btn-add" id="campCopy" data-nums="' + escapeAttr(cs.map(c => c.phone).join("\n")) + '" style="margin:0 0 0 6px">📋 নম্বর কপি</button></p>' +
+    '<div style="max-height:320px;overflow:auto">' + (cs.length ? cs.map(c => { const done = cp && sent[c.k + "|" + cp.id]; return '<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)"><div style="flex:1"><b>' + escapeHtml(c.name || c.phone) + '</b> <small style="color:var(--muted)">' + escapeHtml(c.phone) + ' · ' + c.tag + '</small></div>' +
+      (cp ? '<a class="btn-add" style="margin:0;' + (done ? 'opacity:.55' : '') + '" data-send="' + c.k + "|" + escapeAttr(cp.id) + '" href="https://wa.me/88' + escapeAttr(String(c.phone).replace(/\D/g, "")) + '?text=' + encodeURIComponent(msgFor(c)) + '" target="_blank" rel="noopener">' + (done ? "✓ পাঠানো" : "📲 পাঠাও") + '</a>' : '') +
+      '<button class="btn-del" data-opt="' + c.k + '" title="আর পাঠাবেন না">🚫</button></div>'; }).join("") : '<p style="color:var(--muted)">এখনও কেউ নেই। শপের ফুটারের ফর্ম আর অর্ডারের টিকবাক্স থেকে সম্মতি-দেওয়া নম্বর জমবে।</p>') + '</div>');
+  // সম্মতি-দেওয়া মানুষের ভিজিট ইতিহাস
+  const H = state.shopHist || {}, hv = [];
+  (state.shopVid || []).forEach(x => hv.push({ name: x.name, phone: x.phone, vid: x.vid, time: x.time, kind: "🛒 অর্ডার" }));
+  (state.shopSubs || []).forEach(s => { if (s.vid) hv.push({ name: s.name, phone: s.phone, vid: s.vid, time: s.time, kind: "🔔 সাবস্ক্রাইব" }); });
+  hv.sort((a, b) => String(b.time).localeCompare(String(a.time)));
+  html += card("👤 সম্মতি-দেওয়া মানুষের ভিজিট ইতিহাস", '<p style="color:var(--muted);font-size:.85rem;margin:0 0 8px">শুধু তাদের, যারা অর্ডার বা ফর্মের সময় আলাদা টিকবাক্সে সম্মতি দিয়েছে যে দেখা পণ্যের তথ্য তাদের নম্বরের সাথে যুক্ত থাকতে পারে। বাকি ভিজিটর বেনামিই থাকে।</p>' +
+    (hv.length ? '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>নাম/নম্বর</th><th></th><th>প্রথম ভিজিট</th><th>কত দিন এসেছে</th><th>উৎস</th><th>যা দেখেছে</th><th>কার্ট</th></tr></thead><tbody>' + hv.slice(0, 30).map(x => { const hh = H[x.vid]; return '<tr><td>' + escapeHtml(x.name || x.phone) + '</td><td>' + x.kind + '</td><td>' + (hh ? escapeHtml(hh.first) : "—") + '</td><td>' + (hh ? bn(hh.days) : "—") + '</td><td>' + (hh && hh.src ? escapeHtml(hh.src) : "—") + '</td><td>' + (hh && hh.prods.length ? hh.prods.map(p => escapeHtml(pn(p[0])) + " (" + bn(p[1]) + ")").join(", ") : "—") + '</td><td>' + (hh ? bn(hh.cart) : "—") + '</td></tr>'; }).join("") + '</tbody></table></div>' : '<p style="color:var(--muted)">এখনও কেউ সম্মতি দেয়নি।</p>'));
+  // Google Analytics
+  const G = state.ga, gs = (arr, i) => (arr || []).reduce((s, x) => s + num(x.m[i]), 0);
+  const gt = (arr, cols) => '<table class="data-table"><tbody>' + (arr || []).map(x => '<tr><td>' + escapeHtml(x.d[0]) + '</td>' + cols.map(i => '<td>' + bn(num(x.m[i])) + '</td>').join("") + '</tr>').join("") + '</tbody></table>';
+  html += card("📊 Google Analytics (গত ২৮ দিন)", '<button class="btn-add" id="gaGo" style="margin:0 0 8px">🔄 GA4 থেকে আনো</button>' + (G ?
+    '<div class="analytics-grid">' + cell("🧑", bn(gs(G.daily, 1)), "Sessions") + cell("📄", bn(gs(G.daily, 2)), "Page Views") + '</div><p style="color:var(--muted);font-size:.8rem">আনা হয়েছে: ' + escapeHtml(String(G.at).slice(0, 16).replace("T", " ")) + '</p>' +
+    '<h4 style="margin:8px 0 4px">ট্রাফিকের উৎস (Sessions · ইউজার)</h4>' + gt(G.channels, [0, 1]) + '<h4 style="margin:8px 0 4px">ডিভাইস</h4>' + gt(G.devices, [0]) + '<h4 style="margin:8px 0 4px">শহর (ইউজার)</h4>' + gt(G.cities, [0]) + '<h4 style="margin:8px 0 4px">বেশি দেখা পেজ</h4>' + gt(G.pages, [0])
+    : '<p style="color:var(--muted)">GA4 সেটআপ হলে বোতাম চাপলে এখানে আসবে। (ড্যাশবোর্ডের Apps Script-এ GA_PROPERTY_ID ও Analytics Data API সার্ভিস লাগে)</p>'));
+  box.innerHTML = html;
+}
+async function fetchGa(){
+  if (!syncUrl){ toast("⚠️ আগে Sheet Sync URL দাও", "error"); return; }
+  toast("📊 GA4 আনা হচ্ছে...");
+  try { const r = await (await sheetPostRaw({ action: "ga" })).json(); if (!r.ok) throw new Error(r.error || "আসেনি"); r.at = new Date().toISOString(); state.ga = r; save(); renderWebExtras(); toast("✅ GA4 এসেছে", "success"); }
+  catch(err){ toast("❌ " + err.message, "error"); }
 }
 async function createInventoryFromShop(){
   const url = localStorage.getItem(SHOP_URL_KEY) || SHOP_API_DEFAULT, pw = localStorage.getItem(SHOP_PW_KEY) || "";
@@ -4768,7 +4889,7 @@ async function importShopOrders(){
       paidNow++;
     }
   });
-  syncKpiFromShop(r.orders || []); syncWebsiteFromShop(r.orders || []); syncQuarterFromShop(r.orders || []); syncSources(r.orders || []); state.shopImported = true;
+  syncKpiFromShop(r.orders || []); syncWebsiteFromShop(r.orders || [], r.web); syncWebFromShop(r); syncQuarterFromShop(r.orders || []); syncSources(r.orders || []); state.shopImported = true;
   save();
   try { renderOrders(); renderPayments(); renderInventory(); renderCustomers(); renderTodayDashboard(); renderKPI(); renderPackaging(); renderPipeline(); renderWebsite(); renderSuppliers(); } catch(e){ console.warn(e); }
   toast("✅ নতুন " + bn(added) + ", Paid " + bn(paidNow) + (removed ? ", বাতিল " + bn(removed) : "") + (unl ? " · 🔗 " + bn(unl) + "টি লাইন Inventory-র সাথে জোড়া নেই" : "") + (noBuy ? " · ⚠️ " + bn(noBuy) + "টি লাইনে ক্রয়মূল্য নেই" : ""), (noBuy || unl) ? "error" : "success");
